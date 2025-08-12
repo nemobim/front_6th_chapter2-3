@@ -4,17 +4,9 @@ import { useLocation, useNavigate } from "react-router-dom"
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/shared/ui/card"
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/shared/ui/dialog"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/shared/ui/select"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/shared/ui/table"
-import {
-  Button,
-  Input,
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-  Textarea,
-} from "@/shared/ui/templete"
+import { Button, Input, Textarea } from "@/shared/ui/templete"
 
 const PostsManager = () => {
   const navigate = useNavigate()
