@@ -2,7 +2,8 @@ import { Edit2, MessageSquare, Plus, Search, ThumbsDown, ThumbsUp, Trash2 } from
 import { useEffect, useState } from "react"
 import { useLocation, useNavigate } from "react-router-dom"
 
-import { Card, CardContent, CardHeader, CardTitle } from "@/shared/ui"
+import { Card, CardContent, CardHeader, CardTitle } from "@/shared/ui/card"
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/shared/ui/table"
 import {
   Button,
   Dialog,
@@ -15,12 +16,6 @@ import {
   SelectItem,
   SelectTrigger,
   SelectValue,
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
   Textarea,
 } from "@/shared/ui/templete"
 
