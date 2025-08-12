@@ -2,12 +2,11 @@ import { Edit2, MessageSquare, Plus, Search, ThumbsDown, ThumbsUp, Trash2 } from
 import { useEffect, useState } from "react"
 import { useLocation, useNavigate } from "react-router-dom"
 
-import { Input, Textarea } from "@/shared/ui"
+import { Button, Input, Textarea } from "@/shared/ui"
 import { Card, CardContent, CardHeader, CardTitle } from "@/shared/ui/card"
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/shared/ui/dialog"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/shared/ui/select"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/shared/ui/table"
-import { Button } from "@/shared/ui/templete"
 
 const PostsManager = () => {
   const navigate = useNavigate()
