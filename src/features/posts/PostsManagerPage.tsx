@@ -2,12 +2,9 @@ import { Edit2, MessageSquare, Plus, Search, ThumbsDown, ThumbsUp, Trash2 } from
 import { useEffect, useState } from "react"
 import { useLocation, useNavigate } from "react-router-dom"
 
+import { Card, CardContent, CardHeader, CardTitle } from "@/shared/ui"
 import {
   Button,
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
   Dialog,
   DialogContent,
   DialogHeader,
@@ -25,7 +22,7 @@ import {
   TableHeader,
   TableRow,
   Textarea,
-} from "../../shared/ui"
+} from "@/shared/ui/templete"
 
 const PostsManager = () => {
   const navigate = useNavigate()
