@@ -1,7 +1,7 @@
 import { Edit2, MessageSquare, Plus, Search, ThumbsDown, ThumbsUp, Trash2 } from "lucide-react"
-import { useEffect, useState } from "react"
-import { useLocation, useNavigate } from "react-router-dom"
+import { useState } from "react"
 
+import { useSearchQuery } from "@/shared/hook"
 import { Button, Input, Textarea } from "@/shared/ui"
 import { Card, CardContent, CardHeader, CardTitle } from "@/shared/ui/card"
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/shared/ui/dialog"
@@ -12,21 +12,24 @@ import { useGetTags } from "./hooks"
 import { useGetPosts } from "./hooks/usePost"
 
 const PostsManager = () => {
-  const navigate = useNavigate()
-  const location = useLocation()
-  const queryParams = new URLSearchParams(location.search)
+  // URL 파라미터 관리 - 초기값을 기본값으로 설정
+  const { searchCondition, setSearchCondition } = useSearchQuery({
+    skip: 0,
+    limit: 10,
+    search: "",
+    tag: "all", // "" → "all"
+    sortBy: "none", // "" → "none"
+    sortOrder: "asc",
+  })
 
-  // 상태 관리
-  const [skip, setSkip] = useState(parseInt(queryParams.get("skip") || "0"))
-  const [limit, setLimit] = useState(parseInt(queryParams.get("limit") || "10"))
-  const [searchQuery, setSearchQuery] = useState(queryParams.get("search") || "")
+  // 검색어 입력
+  const [searchInput, setSearchInput] = useState(searchCondition.search)
+
+  // 기타 상태 관리
   const [selectedPost, setSelectedPost] = useState(null)
-  const [sortBy, setSortBy] = useState(queryParams.get("sortBy") || "")
-  const [sortOrder, setSortOrder] = useState(queryParams.get("sortOrder") || "asc")
   const [showAddDialog, setShowAddDialog] = useState(false)
   const [showEditDialog, setShowEditDialog] = useState(false)
   const [newPost, setNewPost] = useState({ title: "", body: "", userId: 1 })
-  const [selectedTag, setSelectedTag] = useState(queryParams.get("tag") || "")
   const [comments, setComments] = useState({})
   const [selectedComment, setSelectedComment] = useState(null)
   const [newComment, setNewComment] = useState({ body: "", postId: null, userId: 1 })
@@ -36,26 +39,57 @@ const PostsManager = () => {
   const [showUserModal, setShowUserModal] = useState(false)
   const [selectedUser, setSelectedUser] = useState(null)
 
-  // React Query 훅 사용
   const { posts, total, isLoading } = useGetPosts({
-    limit,
-    skip,
-    search: searchQuery,
-    tag: selectedTag,
+    limit: searchCondition.limit,
+    skip: searchCondition.skip,
+    search: searchCondition.search,
+    tag: searchCondition.tag,
   })
 
   const { data: tags } = useGetTags()
 
-  // URL 업데이트 함수
-  const updateURL = () => {
-    const params = new URLSearchParams()
-    if (skip) params.set("skip", skip.toString())
-    if (limit) params.set("limit", limit.toString())
-    if (searchQuery) params.set("search", searchQuery)
-    if (sortBy) params.set("sortBy", sortBy)
-    if (sortOrder) params.set("sortOrder", sortOrder)
-    if (selectedTag) params.set("tag", selectedTag)
-    navigate(`?${params.toString()}`)
+  // 검색어 변경 핸들러 (엔터 시에만 적용)
+  const handleSearchSubmit = () => {
+    setSearchCondition((prev) => ({ ...prev, search: searchInput, skip: 0 }))
+  }
+
+  // 검색어 입력 핸들러
+  const handleSearchInputChange = (value: string) => {
+    setSearchInput(value)
+  }
+
+  // 엔터키 핸들러
+  const handleKeyPress = (e: React.KeyboardEvent) => {
+    if (e.key === "Enter") {
+      handleSearchSubmit()
+    }
+  }
+
+  // 태그 변경 핸들러
+  const handleTagChange = (value: string) => {
+    const tagValue = value === "all" ? "" : value
+    setSearchCondition((prev) => ({ ...prev, tag: tagValue, skip: 0 }))
+  }
+
+  // 정렬 변경 핸들러
+  const handleSortByChange = (value: string) => {
+    const sortValue = value === "none" ? "" : value
+    setSearchCondition((prev) => ({ ...prev, sortBy: sortValue }))
+  }
+
+  // 정렬 순서 변경 핸들러
+  const handleSortOrderChange = (value: string) => {
+    setSearchCondition((prev) => ({ ...prev, sortOrder: value }))
+  }
+
+  // 페이지네이션 핸들러
+  const handleSkipChange = (newSkip: number) => {
+    setSearchCondition((prev) => ({ ...prev, skip: newSkip }))
+  }
+
+  // 페이지 크기 변경 핸들러
+  const handleLimitChange = (newLimit: number) => {
+    setSearchCondition((prev) => ({ ...prev, limit: newLimit, skip: 0 }))
   }
 
   // 게시물 추가
@@ -105,7 +139,7 @@ const PostsManager = () => {
 
   // 댓글 가져오기
   const fetchComments = async (postId) => {
-    if (comments[postId]) return // 이미 불러온 댓글이 있으면 다시 불러오지 않음
+    if (comments[postId]) return
     try {
       const response = await fetch(`/api/comments/post/${postId}`)
       const data = await response.json()
@@ -208,16 +242,6 @@ const PostsManager = () => {
     }
   }
 
-  useEffect(() => {
-    const params = new URLSearchParams(location.search)
-    setSkip(parseInt(params.get("skip") || "0"))
-    setLimit(parseInt(params.get("limit") || "10"))
-    setSearchQuery(params.get("search") || "")
-    setSortBy(params.get("sortBy") || "")
-    setSortOrder(params.get("sortOrder") || "asc")
-    setSelectedTag(params.get("tag") || "")
-  }, [location.search])
-
   // 하이라이트 함수 추가
   const highlightText = (text: string, highlight: string) => {
     if (!text) return null
@@ -251,21 +275,18 @@ const PostsManager = () => {
             <TableCell>{post.id}</TableCell>
             <TableCell>
               <div className="space-y-1">
-                <div>{highlightText(post.title, searchQuery)}</div>
+                <div>{highlightText(post.title, searchCondition.search)}</div>
 
                 <div className="flex flex-wrap gap-1">
                   {post.tags?.map((tag) => (
                     <span
                       className={`px-1 text-[9px] font-semibold rounded-[4px] cursor-pointer ${
-                        selectedTag === tag
+                        searchCondition.tag === tag
                           ? "text-white bg-blue-500 hover:bg-blue-600"
                           : "text-blue-800 bg-blue-100 hover:bg-blue-200"
                       }`}
                       key={tag}
-                      onClick={() => {
-                        setSelectedTag(tag)
-                        updateURL()
-                      }}
+                      onClick={() => handleTagChange(tag)}
                     >
                       {tag}
                     </span>
@@ -334,7 +355,7 @@ const PostsManager = () => {
           <div className="flex items-center justify-between text-sm border-b pb-1" key={comment.id}>
             <div className="flex items-center space-x-2 overflow-hidden">
               <span className="font-medium truncate">{comment.user.username}:</span>
-              <span className="truncate">{highlightText(comment.body, searchQuery)}</span>
+              <span className="truncate">{highlightText(comment.body, searchCondition.search)}</span>
             </div>
             <div className="flex items-center space-x-1">
               <Button onClick={() => likeComment(comment.id, postId)} size="sm" variant="ghost">
@@ -381,19 +402,14 @@ const PostsManager = () => {
                 <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
                 <Input
                   className="pl-8"
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  placeholder="게시물 검색..."
-                  value={searchQuery}
+                  onChange={(e) => handleSearchInputChange(e.target.value)}
+                  onKeyPress={handleKeyPress}
+                  placeholder="게시물 검색... (엔터로 검색)"
+                  value={searchInput}
                 />
               </div>
             </div>
-            <Select
-              onValueChange={(value) => {
-                setSelectedTag(value)
-                updateURL()
-              }}
-              value={selectedTag}
-            >
+            <Select onValueChange={handleTagChange} value={searchCondition.tag || "all"}>
               <SelectTrigger className="w-[180px]">
                 <SelectValue placeholder="태그 선택" />
               </SelectTrigger>
@@ -406,7 +422,7 @@ const PostsManager = () => {
                 ))}
               </SelectContent>
             </Select>
-            <Select onValueChange={setSortBy} value={sortBy}>
+            <Select onValueChange={handleSortByChange} value={searchCondition.sortBy || "none"}>
               <SelectTrigger className="w-[180px]">
                 <SelectValue placeholder="정렬 기준" />
               </SelectTrigger>
@@ -417,7 +433,7 @@ const PostsManager = () => {
                 <SelectItem value="reactions">반응</SelectItem>
               </SelectContent>
             </Select>
-            <Select onValueChange={setSortOrder} value={sortOrder}>
+            <Select onValueChange={handleSortOrderChange} value={searchCondition.sortOrder}>
               <SelectTrigger className="w-[180px]">
                 <SelectValue placeholder="정렬 순서" />
               </SelectTrigger>
@@ -435,7 +451,10 @@ const PostsManager = () => {
           <div className="flex justify-between items-center">
             <div className="flex items-center gap-2">
               <span>표시</span>
-              <Select onValueChange={(value) => setLimit(Number(value))} value={limit.toString()}>
+              <Select
+                onValueChange={(value) => handleLimitChange(Number(value))}
+                value={searchCondition.limit.toString()}
+              >
                 <SelectTrigger className="w-[180px]">
                   <SelectValue placeholder="10" />
                 </SelectTrigger>
@@ -448,10 +467,16 @@ const PostsManager = () => {
               <span>항목</span>
             </div>
             <div className="flex gap-2">
-              <Button disabled={skip === 0} onClick={() => setSkip(Math.max(0, skip - limit))}>
+              <Button
+                disabled={searchCondition.skip === 0}
+                onClick={() => handleSkipChange(Math.max(0, searchCondition.skip - searchCondition.limit))}
+              >
                 이전
               </Button>
-              <Button disabled={skip + limit >= total} onClick={() => setSkip(skip + limit)}>
+              <Button
+                disabled={searchCondition.skip + searchCondition.limit >= total}
+                onClick={() => handleSkipChange(searchCondition.skip + searchCondition.limit)}
+              >
                 다음
               </Button>
             </div>
@@ -549,10 +574,10 @@ const PostsManager = () => {
       <Dialog onOpenChange={setShowPostDetailDialog} open={showPostDetailDialog}>
         <DialogContent className="max-w-3xl">
           <DialogHeader>
-            <DialogTitle>{highlightText(selectedPost?.title, searchQuery)}</DialogTitle>
+            <DialogTitle>{highlightText(selectedPost?.title, searchCondition.search)}</DialogTitle>
           </DialogHeader>
           <div className="space-y-4">
-            <p>{highlightText(selectedPost?.body, searchQuery)}</p>
+            <p>{highlightText(selectedPost?.body, searchCondition.search)}</p>
             {renderComments(selectedPost?.id)}
           </div>
         </DialogContent>
