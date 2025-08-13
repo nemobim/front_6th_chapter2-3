@@ -1,35 +1,27 @@
 import { Edit2, MessageSquare, Plus, Search, ThumbsDown, ThumbsUp, Trash2 } from "lucide-react"
-import { useState } from "react"
-
-import { useSearchQuery } from "@/shared/hook"
-import { Button, Input, Textarea } from "@/shared/ui"
-import { Card, CardContent, CardHeader, CardTitle } from "@/shared/ui/card"
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/shared/ui/dialog"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/shared/ui/select"
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/shared/ui/table"
-
-import { useGetTags } from "./hooks"
-import { useGetPosts } from "./hooks/usePost"
+import { useEffect, useState } from "react"
+import { useLocation, useNavigate } from "react-router-dom"
 
 const PostsManager = () => {
-  // URL 파라미터 관리 - 초기값을 기본값으로 설정
-  const { searchCondition, setSearchCondition } = useSearchQuery({
-    skip: 0,
-    limit: 10,
-    search: "",
-    tag: "all",
-    sortBy: "none",
-    sortOrder: "asc",
-  })
+  const navigate = useNavigate()
+  const location = useLocation()
+  const queryParams = new URLSearchParams(location.search)
 
-  // 검색어 입력 임시 상태 (엔터 전까지)
-  const [searchInput, setSearchInput] = useState(searchCondition.search)
-
-  // 기타 상태 관리
+  // 상태 관리
+  const [posts, setPosts] = useState([])
+  const [total, setTotal] = useState(0)
+  const [skip, setSkip] = useState(parseInt(queryParams.get("skip") || "0"))
+  const [limit, setLimit] = useState(parseInt(queryParams.get("limit") || "10"))
+  const [searchQuery, setSearchQuery] = useState(queryParams.get("search") || "")
   const [selectedPost, setSelectedPost] = useState(null)
+  const [sortBy, setSortBy] = useState(queryParams.get("sortBy") || "")
+  const [sortOrder, setSortOrder] = useState(queryParams.get("sortOrder") || "asc")
   const [showAddDialog, setShowAddDialog] = useState(false)
   const [showEditDialog, setShowEditDialog] = useState(false)
   const [newPost, setNewPost] = useState({ title: "", body: "", userId: 1 })
+  const [loading, setLoading] = useState(false)
+  const [tags, setTags] = useState([])
+  const [selectedTag, setSelectedTag] = useState(queryParams.get("tag") || "")
   const [comments, setComments] = useState({})
   const [selectedComment, setSelectedComment] = useState(null)
   const [newComment, setNewComment] = useState({ body: "", postId: null, userId: 1 })
@@ -39,95 +31,103 @@ const PostsManager = () => {
   const [showUserModal, setShowUserModal] = useState(false)
   const [selectedUser, setSelectedUser] = useState(null)
 
-  // React Query 훅 사용
-  const { posts, total, isLoading } = useGetPosts({
-    limit: searchCondition.limit,
-    skip: searchCondition.skip,
-    search: searchCondition.search,
-    tag: searchCondition.tag === "all" ? undefined : searchCondition.tag, // "all"이면 undefined로
-    sortBy: searchCondition.sortBy === "none" ? undefined : searchCondition.sortBy, // "none"이면 undefined로
-    sortOrder: searchCondition.sortOrder,
-  })
-
-  const { data: tags } = useGetTags()
-
-  // 검색어 변경 핸들러 (엔터 시에만 적용)
-  const handleSearchSubmit = () => {
-    setSearchCondition((prev) => ({
-      ...prev,
-      search: searchInput,
-      skip: 0,
-      // 검색 시 다른 모든 필터 초기화 (DummyJSON에서 검색과 다른 필터들은 동시에 지원하지 않음)
-      tag: searchInput.trim() ? "all" : prev.tag,
-      sortBy: searchInput.trim() ? "none" : prev.sortBy,
-      sortOrder: searchInput.trim() ? "asc" : prev.sortOrder,
-    }))
+  // URL 업데이트 함수
+  const updateURL = () => {
+    const params = new URLSearchParams()
+    if (skip) params.set("skip", skip.toString())
+    if (limit) params.set("limit", limit.toString())
+    if (searchQuery) params.set("search", searchQuery)
+    if (sortBy) params.set("sortBy", sortBy)
+    if (sortOrder) params.set("sortOrder", sortOrder)
+    if (selectedTag) params.set("tag", selectedTag)
+    navigate(`?${params.toString()}`)
   }
 
-  // 검색어 입력 핸들러
-  const handleSearchInputChange = (value: string) => {
-    setSearchInput(value)
+  // 게시물 가져오기
+  const fetchPosts = () => {
+    setLoading(true)
+    let postsData
+    let usersData
+
+    fetch(`/api/posts?limit=${limit}&skip=${skip}`)
+      .then((response) => response.json())
+      .then((data) => {
+        postsData = data
+        return fetch("/api/users?limit=0&select=username,image")
+      })
+      .then((response) => response.json())
+      .then((users) => {
+        usersData = users.users
+        const postsWithUsers = postsData.posts.map((post) => ({
+          ...post,
+          author: usersData.find((user) => user.id === post.userId),
+        }))
+        setPosts(postsWithUsers)
+        setTotal(postsData.total)
+      })
+      .catch((error) => {
+        console.error("게시물 가져오기 오류:", error)
+      })
+      .finally(() => {
+        setLoading(false)
+      })
   }
 
-  // 엔터키 핸들러
-  const handleKeyPress = (e: React.KeyboardEvent) => {
-    if (e.key === "Enter") {
-      handleSearchSubmit()
+  // 태그 가져오기
+  const fetchTags = async () => {
+    try {
+      const response = await fetch("/api/posts/tags")
+      const data = await response.json()
+      setTags(data)
+    } catch (error) {
+      console.error("태그 가져오기 오류:", error)
     }
   }
 
-  // 태그 변경 핸들러
-  const handleTagChange = (value: string) => {
-    const tagValue = value === "all" ? "all" : value
-    setSearchCondition((prev) => ({
-      ...prev,
-      tag: tagValue,
-      skip: 0,
-      // 태그 선택 시 검색어와 정렬 초기화
-      search: tagValue !== "all" ? "" : prev.search,
-      sortBy: tagValue !== "all" ? "none" : prev.sortBy,
-      sortOrder: tagValue !== "all" ? "asc" : prev.sortOrder,
-    }))
-    // 태그 변경 시 검색 입력도 초기화
-    if (tagValue !== "all") {
-      setSearchInput("")
+  // 게시물 검색
+  const searchPosts = async () => {
+    if (!searchQuery) {
+      fetchPosts()
+      return
     }
-  }
-
-  // 정렬 변경 핸들러
-  const handleSortByChange = (value: string) => {
-    const sortValue = value === "none" ? "none" : value
-    setSearchCondition((prev) => ({
-      ...prev,
-      sortBy: sortValue,
-      skip: 0,
-      // 정렬 선택 시 검색어와 태그 초기화
-      search: sortValue !== "none" ? "" : prev.search,
-      tag: sortValue !== "none" ? "all" : prev.tag,
-    }))
-    // 정렬 변경 시 검색 입력도 초기화
-    if (sortValue !== "none") {
-      setSearchInput("")
+    setLoading(true)
+    try {
+      const response = await fetch(`/api/posts/search?q=${searchQuery}`)
+      const data = await response.json()
+      setPosts(data.posts)
+      setTotal(data.total)
+    } catch (error) {
+      console.error("게시물 검색 오류:", error)
     }
+    setLoading(false)
   }
 
-  // 정렬 순서 변경 핸들러
-  const handleSortOrderChange = (value: string) => {
-    setSearchCondition((prev) => ({
-      ...prev,
-      sortOrder: value,
-      skip: 0,
-    }))
-  }
+  // 태그별 게시물 가져오기
+  const fetchPostsByTag = async (tag) => {
+    if (!tag || tag === "all") {
+      fetchPosts()
+      return
+    }
+    setLoading(true)
+    try {
+      const [postsResponse, usersResponse] = await Promise.all([
+        fetch(`/api/posts/tag/${tag}`),
+        fetch("/api/users?limit=0&select=username,image"),
+      ])
+      const postsData = await postsResponse.json()
+      const usersData = await usersResponse.json()
 
-  // 페이지네이션 핸들러
-  const handleSkipChange = (newSkip: number) => {
-    setSearchCondition((prev) => ({ ...prev, skip: newSkip }))
-  }
+      const postsWithUsers = postsData.posts.map((post) => ({
+        ...post,
+        author: usersData.users.find((user) => user.id === post.userId),
+      }))
 
-  // 페이지 크기 변경 핸들러
-  const handleLimitChange = (newLimit: number) => {
-    setSearchCondition((prev) => ({ ...prev, limit: newLimit, skip: 0 }))
+      setPosts(postsWithUsers)
+      setTotal(postsData.total)
+    } catch (error) {
+      console.error("태그별 게시물 가져오기 오류:", error)
+    }
+    setLoading(false)
   }
 
   // 게시물 추가
@@ -139,7 +139,7 @@ const PostsManager = () => {
         body: JSON.stringify(newPost),
       })
       const data = await response.json()
-      // TODO: React Query mutation으로 변경 필요
+      setPosts([data, ...posts])
       setShowAddDialog(false)
       setNewPost({ title: "", body: "", userId: 1 })
     } catch (error) {
@@ -156,7 +156,7 @@ const PostsManager = () => {
         body: JSON.stringify(selectedPost),
       })
       const data = await response.json()
-      // TODO: React Query mutation으로 변경 필요
+      setPosts(posts.map((post) => (post.id === data.id ? data : post)))
       setShowEditDialog(false)
     } catch (error) {
       console.error("게시물 업데이트 오류:", error)
@@ -169,7 +169,7 @@ const PostsManager = () => {
       await fetch(`/api/posts/${id}`, {
         method: "DELETE",
       })
-      // TODO: React Query mutation으로 변경 필요
+      setPosts(posts.filter((post) => post.id !== id))
     } catch (error) {
       console.error("게시물 삭제 오류:", error)
     }
@@ -177,7 +177,7 @@ const PostsManager = () => {
 
   // 댓글 가져오기
   const fetchComments = async (postId) => {
-    if (comments[postId]) return
+    if (comments[postId]) return // 이미 불러온 댓글이 있으면 다시 불러오지 않음
     try {
       const response = await fetch(`/api/comments/post/${postId}`)
       const data = await response.json()
@@ -280,6 +280,29 @@ const PostsManager = () => {
     }
   }
 
+  useEffect(() => {
+    fetchTags()
+  }, [])
+
+  useEffect(() => {
+    if (selectedTag) {
+      fetchPostsByTag(selectedTag)
+    } else {
+      fetchPosts()
+    }
+    updateURL()
+  }, [skip, limit, sortBy, sortOrder, selectedTag])
+
+  useEffect(() => {
+    const params = new URLSearchParams(location.search)
+    setSkip(parseInt(params.get("skip") || "0"))
+    setLimit(parseInt(params.get("limit") || "10"))
+    setSearchQuery(params.get("search") || "")
+    setSortBy(params.get("sortBy") || "")
+    setSortOrder(params.get("sortOrder") || "asc")
+    setSelectedTag(params.get("tag") || "")
+  }, [location.search])
+
   // 하이라이트 함수 추가
   const highlightText = (text: string, highlight: string) => {
     if (!text) return null
@@ -313,18 +336,21 @@ const PostsManager = () => {
             <TableCell>{post.id}</TableCell>
             <TableCell>
               <div className="space-y-1">
-                <div>{highlightText(post.title, searchCondition.search)}</div>
+                <div>{highlightText(post.title, searchQuery)}</div>
 
                 <div className="flex flex-wrap gap-1">
                   {post.tags?.map((tag) => (
                     <span
                       className={`px-1 text-[9px] font-semibold rounded-[4px] cursor-pointer ${
-                        searchCondition.tag === tag
+                        selectedTag === tag
                           ? "text-white bg-blue-500 hover:bg-blue-600"
                           : "text-blue-800 bg-blue-100 hover:bg-blue-200"
                       }`}
                       key={tag}
-                      onClick={() => handleTagChange(tag)}
+                      onClick={() => {
+                        setSelectedTag(tag)
+                        updateURL()
+                      }}
                     >
                       {tag}
                     </span>
@@ -393,7 +419,7 @@ const PostsManager = () => {
           <div className="flex items-center justify-between text-sm border-b pb-1" key={comment.id}>
             <div className="flex items-center space-x-2 overflow-hidden">
               <span className="font-medium truncate">{comment.user.username}:</span>
-              <span className="truncate">{highlightText(comment.body, searchCondition.search)}</span>
+              <span className="truncate">{highlightText(comment.body, searchQuery)}</span>
             </div>
             <div className="flex items-center space-x-1">
               <Button onClick={() => likeComment(comment.id, postId)} size="sm" variant="ghost">
@@ -440,35 +466,34 @@ const PostsManager = () => {
                 <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
                 <Input
                   className="pl-8"
-                  onChange={(e) => handleSearchInputChange(e.target.value)}
-                  onKeyPress={handleKeyPress}
-                  placeholder="게시물 검색... (엔터로 검색)"
-                  value={searchInput}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  onKeyPress={(e) => e.key === "Enter" && searchPosts()}
+                  placeholder="게시물 검색..."
+                  value={searchQuery}
                 />
               </div>
             </div>
-
-            {/* 검색 중일 때 태그 선택 비활성화 */}
-            <Select disabled={!!searchCondition.search} onValueChange={handleTagChange} value={searchCondition.tag}>
+            <Select
+              onValueChange={(value) => {
+                setSelectedTag(value)
+                fetchPostsByTag(value)
+                updateURL()
+              }}
+              value={selectedTag}
+            >
               <SelectTrigger className="w-[180px]">
                 <SelectValue placeholder="태그 선택" />
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">모든 태그</SelectItem>
-                {tags?.map((tag) => (
+                {tags.map((tag) => (
                   <SelectItem key={tag.url} value={tag.slug}>
                     {tag.slug}
                   </SelectItem>
                 ))}
               </SelectContent>
             </Select>
-
-            {/* 검색 중이거나 태그 필터링 중일 때 정렬 비활성화 */}
-            <Select
-              disabled={!!searchCondition.search || searchCondition.tag !== "all"}
-              onValueChange={handleSortByChange}
-              value={searchCondition.sortBy || "none"}
-            >
+            <Select onValueChange={setSortBy} value={sortBy}>
               <SelectTrigger className="w-[180px]">
                 <SelectValue placeholder="정렬 기준" />
               </SelectTrigger>
@@ -479,18 +504,7 @@ const PostsManager = () => {
                 <SelectItem value="reactions">반응</SelectItem>
               </SelectContent>
             </Select>
-
-            {/* 정렬 기준이 없거나 다른 필터가 활성화된 경우 정렬 순서 비활성화 */}
-            <Select
-              disabled={
-                !!searchCondition.search ||
-                searchCondition.tag !== "all" ||
-                !searchCondition.sortBy ||
-                searchCondition.sortBy === "none"
-              }
-              onValueChange={handleSortOrderChange}
-              value={searchCondition.sortOrder}
-            >
+            <Select onValueChange={setSortOrder} value={sortOrder}>
               <SelectTrigger className="w-[180px]">
                 <SelectValue placeholder="정렬 순서" />
               </SelectTrigger>
@@ -501,39 +515,14 @@ const PostsManager = () => {
             </Select>
           </div>
 
-          {/* 현재 활성화된 필터 표시--------------------------- */}
-          {(searchCondition.search ||
-            searchCondition.tag !== "all" ||
-            (searchCondition.sortBy && searchCondition.sortBy !== "none")) && (
-            <div className="flex gap-2 text-sm">
-              {searchCondition.search && (
-                <span className="px-2 py-1 bg-blue-100 text-blue-800 rounded">검색: "{searchCondition.search}"</span>
-              )}
-              {searchCondition.tag !== "all" && !searchCondition.search && (
-                <span className="px-2 py-1 bg-green-100 text-green-800 rounded">태그: {searchCondition.tag}</span>
-              )}
-              {searchCondition.sortBy &&
-                searchCondition.sortBy !== "none" &&
-                !searchCondition.search &&
-                searchCondition.tag === "all" && (
-                  <span className="px-2 py-1 bg-purple-100 text-purple-800 rounded">
-                    정렬: {searchCondition.sortBy} ({searchCondition.sortOrder})
-                  </span>
-                )}
-            </div>
-          )}
-
           {/* 게시물 테이블 */}
-          {isLoading ? <div className="flex justify-center p-4">로딩 중...</div> : renderPostTable()}
+          {loading ? <div className="flex justify-center p-4">로딩 중...</div> : renderPostTable()}
 
           {/* 페이지네이션 */}
           <div className="flex justify-between items-center">
             <div className="flex items-center gap-2">
               <span>표시</span>
-              <Select
-                onValueChange={(value) => handleLimitChange(Number(value))}
-                value={searchCondition.limit.toString()}
-              >
+              <Select onValueChange={(value) => setLimit(Number(value))} value={limit.toString()}>
                 <SelectTrigger className="w-[180px]">
                   <SelectValue placeholder="10" />
                 </SelectTrigger>
@@ -546,16 +535,10 @@ const PostsManager = () => {
               <span>항목</span>
             </div>
             <div className="flex gap-2">
-              <Button
-                disabled={searchCondition.skip === 0}
-                onClick={() => handleSkipChange(Math.max(0, searchCondition.skip - searchCondition.limit))}
-              >
+              <Button disabled={skip === 0} onClick={() => setSkip(Math.max(0, skip - limit))}>
                 이전
               </Button>
-              <Button
-                disabled={searchCondition.skip + searchCondition.limit >= total}
-                onClick={() => handleSkipChange(searchCondition.skip + searchCondition.limit)}
-              >
+              <Button disabled={skip + limit >= total} onClick={() => setSkip(skip + limit)}>
                 다음
               </Button>
             </div>
@@ -653,10 +636,10 @@ const PostsManager = () => {
       <Dialog onOpenChange={setShowPostDetailDialog} open={showPostDetailDialog}>
         <DialogContent className="max-w-3xl">
           <DialogHeader>
-            <DialogTitle>{highlightText(selectedPost?.title, searchCondition.search)}</DialogTitle>
+            <DialogTitle>{highlightText(selectedPost?.title, searchQuery)}</DialogTitle>
           </DialogHeader>
           <div className="space-y-4">
-            <p>{highlightText(selectedPost?.body, searchCondition.search)}</p>
+            <p>{highlightText(selectedPost?.body, searchQuery)}</p>
             {renderComments(selectedPost?.id)}
           </div>
         </DialogContent>

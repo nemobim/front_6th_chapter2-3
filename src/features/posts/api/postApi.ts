@@ -9,4 +9,7 @@ export const postsApi = {
   searchPosts: (query: string) => http.get<PostsResponse>(`/posts/search?q=${query}`),
 
   getPostsByTag: (tag: string) => http.get<PostsResponse>(`/posts/tag/${tag}`),
+
+  getPostsSorted: (params: { order: string; sortBy: string }) =>
+    http.get<PostsResponse>(`/posts?sortBy=${params.sortBy}&order=${params.order}`),
 }

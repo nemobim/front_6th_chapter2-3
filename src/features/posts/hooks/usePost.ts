@@ -4,40 +4,61 @@ import { useMemo } from "react"
 import { postsApi, userApi } from "../api"
 import { postQueryKeys } from "../lib"
 
-export const useGetPosts = (params: { limit: number; search?: string; skip: number; tag?: string }) => {
+export const useGetPosts = (params: {
+  limit: number
+  search?: string
+  skip: number
+  sortBy?: string
+  sortOrder?: string
+  tag?: string
+}) => {
   const queryKey = postQueryKeys.posts.listFilters(params)
 
-  // 검색어에 따른 게시물 조회
   const queryFn = () => {
-    if (params.search) return postsApi.searchPosts(params.search)
-    if (params.tag && params.tag !== "all") return postsApi.getPostsByTag(params.tag)
+    // 검색어가 있으면 검색 API 사용 (태그 무시)
+    if (params.search && params.search.trim()) {
+      return postsApi.searchPosts(params.search)
+    }
+
+    // 태그가 있고 "all"이 아니면 태그 API 사용
+    if (params.tag && params.tag !== "all") {
+      return postsApi.getPostsByTag(params.tag)
+    }
+
+    // 정렬이 있고 "none"이 아니면 정렬 API 사용
+    if (params.sortBy && params.sortBy !== "none" && params.sortOrder) {
+      return postsApi.getPostsSorted({
+        limit: params.limit,
+        skip: params.skip,
+        sortBy: params.sortBy,
+        order: params.sortOrder,
+      })
+    }
+
+    // 기본 posts API 사용
     return postsApi.getPosts({ limit: params.limit, skip: params.skip })
   }
 
-  //먼저 posts 가져오기
   const postsQuery = useQuery({
     queryKey,
     queryFn,
   })
 
-  // posts가 성공한 후에 users 가져오기
   const usersQuery = useQuery({
     queryKey: postQueryKeys.users.basic(),
     queryFn: () => userApi.getAllUsers(),
-    enabled: postsQuery.isSuccess, // posts 성공 후에만 실행
+    enabled: postsQuery.isSuccess,
   })
 
-  // 데이터 합치기
   const postsWithUsers = useMemo(() => {
-    // posts와 users 모두 성공하고 데이터가 있을 때만 처리
     if (!postsQuery.isSuccess || !usersQuery.isSuccess) return []
-    if (!postsQuery.data || !usersQuery.data) return []
+    if (!postsQuery.data?.posts || !usersQuery.data?.users) return []
 
     return postsQuery.data.posts.map((post) => ({
       ...post,
       author: usersQuery.data.users.find((user) => user.id === post.userId),
     }))
-  }, [postsQuery.data, usersQuery.data, postsQuery.isSuccess, usersQuery.isSuccess])
+  }, [postsQuery.isSuccess, postsQuery.data, usersQuery.isSuccess, usersQuery.data])
 
   return {
     posts: postsWithUsers,
