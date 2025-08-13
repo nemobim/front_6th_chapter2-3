@@ -1,6 +1,6 @@
 import { Route, Routes } from "react-router-dom"
 
-import { PostsPage } from "@/pages"
+import { PostsManagerPage } from "@/pages"
 import { BaseLayout } from "@/widgets/layout"
 
 import { AppProvider } from "./providers"
@@ -10,7 +10,7 @@ const App = () => {
     <AppProvider>
       <BaseLayout>
         <Routes>
-          <Route element={<PostsPage />} path="/" />
+          <Route element={<PostsManagerPage />} path="/" />
         </Routes>
       </BaseLayout>
     </AppProvider>
