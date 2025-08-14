@@ -41,8 +41,8 @@ const PostsManager = () => {
 
   // React Query 훅 사용
   const { posts, total, isLoading } = useGetPosts({
-    limit: Number(searchCondition.limit),
-    skip: Number(searchCondition.skip),
+    limit: searchCondition.limit,
+    skip: searchCondition.skip,
     search: searchCondition.search,
     tag: searchCondition.tag === "all" ? undefined : searchCondition.tag, // "all"이면 undefined로
     sortBy: searchCondition.sortBy === "none" ? undefined : searchCondition.sortBy, // "none"이면 undefined로
@@ -121,13 +121,13 @@ const PostsManager = () => {
   }
 
   // 페이지네이션 핸들러
-  const handleSkipChange = (newSkip: number) => {
-    setSearchCondition((prev) => ({ ...prev, skip: Number(newSkip) }))
+  const handleSkipChange = (skip: number) => {
+    setSearchCondition((prev) => ({ ...prev, skip }))
   }
 
   // 페이지 크기 변경 핸들러
-  const handleLimitChange = (newLimit: number) => {
-    setSearchCondition((prev) => ({ ...prev, limit: Number(newLimit), skip: 0 }))
+  const handleLimitChange = (limit: number) => {
+    setSearchCondition((prev) => ({ ...prev, limit, skip: 0 }))
   }
 
   // 게시물 추가
