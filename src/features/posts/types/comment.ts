@@ -20,3 +20,13 @@ export interface CommentUser {
   id: number
   username: string
 }
+
+export interface AddComment {
+  body: string
+  postId: number
+  userId: number
+}
+
+export interface AddCommentResponse extends AddComment {
+  id: number
+}

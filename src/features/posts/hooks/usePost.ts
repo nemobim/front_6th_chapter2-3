@@ -3,7 +3,7 @@ import { useMemo } from "react"
 
 import { postsApi, userApi } from "../api"
 import { postQueryKeys } from "../lib"
-import { PostSearchParams, PostsResponse } from "../types/post"
+import { AddPost, PostSearchParams, PostsResponse, UpdatePost } from "../types/post"
 
 /** 게시물 목록 조회 */
 export const useGetPosts = (params: PostSearchParams) => {
@@ -73,7 +73,7 @@ export const useAddPost = (params: PostSearchParams) => {
   const queryClient = useQueryClient()
 
   return useMutation({
-    mutationFn: postsApi.addPost,
+    mutationFn: (postData: AddPost) => postsApi.addPost(postData),
     onSuccess: (postData) => {
       queryClient.setQueryData(postQueryKeys.posts.list(params), (oldData: PostsResponse) => {
         return {
@@ -94,7 +94,7 @@ export const useUpdatePost = (params: PostSearchParams) => {
   const queryClient = useQueryClient()
 
   return useMutation({
-    mutationFn: postsApi.updatePost,
+    mutationFn: (postData: UpdatePost) => postsApi.updatePost(postData),
     onSuccess: (updatedPost) => {
       queryClient.setQueryData(postQueryKeys.posts.list(params), (oldData: PostsResponse) => {
         return {
@@ -114,7 +114,7 @@ export const useDeletePost = (params: PostSearchParams) => {
   const queryClient = useQueryClient()
 
   return useMutation({
-    mutationFn: postsApi.deletePost,
+    mutationFn: (id: number) => postsApi.deletePost(id),
     onSuccess: (_, deletedPostId) => {
       queryClient.setQueryData(postQueryKeys.posts.list(params), (oldData: PostsResponse) => {
         return {

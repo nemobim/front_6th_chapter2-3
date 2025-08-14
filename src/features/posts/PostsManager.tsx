@@ -9,7 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/shared/ui/table"
 
 import { useGetTags } from "./hooks"
-import { useGetComments } from "./hooks/useComment"
+import { useAddComment, useGetComments } from "./hooks/useComment"
 import { useAddPost, useDeletePost, useGetPosts, useUpdatePost } from "./hooks/usePost"
 import { changePostSearchParams, DEFAULT_POST_SEARCH_PARAMS } from "./lib/postSearchUtils"
 import { PostSearchParams, UpdatePost } from "./types/post"
@@ -155,24 +155,15 @@ const PostsManager = () => {
   // 댓글 목록 가져오기
   const { data: commentsList } = useGetComments(selectedPost?.id)
 
+  const { mutate: addComment } = useAddComment()
   // 댓글 추가
-  const addComment = async () => {
-    try {
-      const response = await fetch("/api/comments/add", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(newComment),
-      })
-      const data = await response.json()
-      // setComments((prev) => ({
-      //   ...prev,
-      //   [data.postId]: [...(prev[data.postId] || []), data],
-      // }))
-      setShowAddCommentDialog(false)
-      setNewComment({ body: "", postId: null, userId: 1 })
-    } catch (error) {
-      console.error("댓글 추가 오류:", error)
-    }
+  const handleAddComment = async () => {
+    addComment(newComment, {
+      onSuccess: () => {
+        setShowAddCommentDialog(false)
+        setNewComment({ body: "", postId: null, userId: 1 })
+      },
+    })
   }
 
   // 댓글 업데이트
@@ -596,7 +587,7 @@ const PostsManager = () => {
               placeholder="댓글 내용"
               value={newComment.body}
             />
-            <Button onClick={addComment}>댓글 추가</Button>
+            <Button onClick={handleAddComment}>댓글 추가</Button>
           </div>
         </DialogContent>
       </Dialog>

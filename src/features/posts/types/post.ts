@@ -30,10 +30,7 @@ export interface AddPost {
 }
 
 export interface AddPostResponse extends AddPost {
-  body: string
   id: number
-  title: string
-  userId: number
 }
 
 /**게시물 목록 파라미터 */
