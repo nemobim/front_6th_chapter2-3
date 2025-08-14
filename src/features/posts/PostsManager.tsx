@@ -41,8 +41,8 @@ const PostsManager = () => {
 
   // React Query 훅 사용
   const { posts, total, isLoading } = useGetPosts({
-    limit: searchCondition.limit,
-    skip: searchCondition.skip,
+    limit: Number(searchCondition.limit),
+    skip: Number(searchCondition.skip),
     search: searchCondition.search,
     tag: searchCondition.tag === "all" ? undefined : searchCondition.tag, // "all"이면 undefined로
     sortBy: searchCondition.sortBy === "none" ? undefined : searchCondition.sortBy, // "none"이면 undefined로
@@ -122,12 +122,12 @@ const PostsManager = () => {
 
   // 페이지네이션 핸들러
   const handleSkipChange = (newSkip: number) => {
-    setSearchCondition((prev) => ({ ...prev, skip: newSkip }))
+    setSearchCondition((prev) => ({ ...prev, skip: Number(newSkip) }))
   }
 
   // 페이지 크기 변경 핸들러
   const handleLimitChange = (newLimit: number) => {
-    setSearchCondition((prev) => ({ ...prev, limit: newLimit, skip: 0 }))
+    setSearchCondition((prev) => ({ ...prev, limit: Number(newLimit), skip: 0 }))
   }
 
   // 게시물 추가
@@ -547,14 +547,16 @@ const PostsManager = () => {
             </div>
             <div className="flex gap-2">
               <Button
-                disabled={searchCondition.skip === 0}
-                onClick={() => handleSkipChange(Math.max(0, searchCondition.skip - searchCondition.limit))}
+                disabled={Number(searchCondition.skip) === 0}
+                onClick={() =>
+                  handleSkipChange(Math.max(0, Number(searchCondition.skip) - Number(searchCondition.limit)))
+                }
               >
                 이전
               </Button>
               <Button
-                disabled={searchCondition.skip + searchCondition.limit >= total}
-                onClick={() => handleSkipChange(searchCondition.skip + searchCondition.limit)}
+                disabled={Number(searchCondition.skip) + Number(searchCondition.limit) >= total}
+                onClick={() => handleSkipChange(Number(searchCondition.skip) + Number(searchCondition.limit))}
               >
                 다음
               </Button>
