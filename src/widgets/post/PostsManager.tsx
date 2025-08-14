@@ -16,6 +16,8 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/shared/ui/di
 
 import { PostPagination } from "../../features/pagination-management/ui"
 import { ActiveFilters, SearchControls } from "../../features/search-management/ui"
+import { useUser } from "../../features/user-management/hooks"
+import { UserModal } from "../../features/user-management/ui"
 
 const PostsManager = () => {
   // URL 파라미터 관리
@@ -30,8 +32,8 @@ const PostsManager = () => {
   const [showAddDialog, setShowAddDialog] = useState(false)
   const [showEditDialog, setShowEditDialog] = useState(false)
   const [showPostDetailDialog, setShowPostDetailDialog] = useState(false)
-  const [showUserModal, setShowUserModal] = useState(false)
-  const [selectedUser, setSelectedUser] = useState(null)
+  // User 관련 상태 제거하고 useUser 훅 사용
+  const { selectedUser, showUserModal, openUserModal, closeUserModal } = useUser()
 
   // React Query 훅 사용
   const { posts, total, isLoading } = useGetPosts(changePostSearchParams(searchCondition))
@@ -158,19 +160,6 @@ const PostsManager = () => {
     setShowPostDetailDialog(true)
   }
 
-  // 사용자 모달 열기
-  const openUserModal = async (user) => {
-    console.log("user", user)
-    try {
-      const response = await fetch(`/api/users/${user.id}`)
-      const userData = await response.json()
-      setSelectedUser(userData)
-      setShowUserModal(true)
-    } catch (error) {
-      console.error("사용자 정보 가져오기 오류:", error)
-    }
-  }
-
   // 게시물 수정 다이얼로그 열기 (테이블에서 수정 버튼 클릭 시)
   const openEditDialog = (post: UpdatePost) => {
     setSelectedPost(post)
@@ -259,39 +248,8 @@ const PostsManager = () => {
         </DialogContent>
       </Dialog>
 
-      {/* 사용자 모달 */}
-      <Dialog onOpenChange={setShowUserModal} open={showUserModal}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>사용자 정보</DialogTitle>
-          </DialogHeader>
-          <div className="space-y-4">
-            <img alt={selectedUser?.username} className="w-24 h-24 rounded-full mx-auto" src={selectedUser?.image} />
-            <h3 className="text-xl font-semibold text-center">{selectedUser?.username}</h3>
-            <div className="space-y-2">
-              <p>
-                <strong>이름:</strong> {selectedUser?.firstName} {selectedUser?.lastName}
-              </p>
-              <p>
-                <strong>나이:</strong> {selectedUser?.age}
-              </p>
-              <p>
-                <strong>이메일:</strong> {selectedUser?.email}
-              </p>
-              <p>
-                <strong>전화번호:</strong> {selectedUser?.phone}
-              </p>
-              <p>
-                <strong>주소:</strong> {selectedUser?.address?.address}, {selectedUser?.address?.city},{" "}
-                {selectedUser?.address?.state}
-              </p>
-              <p>
-                <strong>직장:</strong> {selectedUser?.company?.name} - {selectedUser?.company?.title}
-              </p>
-            </div>
-          </div>
-        </DialogContent>
-      </Dialog>
+      {/* UserModal 컴포넌트 사용 */}
+      <UserModal onOpenChange={closeUserModal} open={showUserModal} user={selectedUser} />
     </Card>
   )
 }
