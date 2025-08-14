@@ -8,4 +8,8 @@ export const commentApi = {
   updateComment: (comment: UpdateComment) =>
     http.put<UpdateCommentRequest, UpdateComment>(`/comments/${comment.id}`, { body: comment.body }),
   deleteComment: (id: number) => http.del<{ id: number; postId: number }>(`/comments/${id}`),
+  likeComment: (id: number, currentLikes: number) =>
+    http.patch<{ currentLikes: number; id: number; postId: number }>(`/comments/${id}`, {
+      likes: currentLikes + 1,
+    }),
 }

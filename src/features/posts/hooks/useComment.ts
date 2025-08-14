@@ -74,3 +74,23 @@ export const useDeleteComment = () => {
     },
   })
 }
+
+/** 댓글 좋아요 */
+export const useLikeComment = () => {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: ({ id, currentLikes }: { currentLikes: number; id: number; postId: number }) =>
+      commentApi.likeComment(id, currentLikes),
+    onSuccess: ({ id, postId }: { id: number; postId: number }) => {
+      queryClient.setQueryData(postQueryKeys.comments.list(postId), (oldData: CommentResponse) => {
+        return {
+          ...oldData,
+          comments: oldData.comments.map((comment) =>
+            comment.id === id ? { ...comment, likes: comment.likes + 1 } : comment,
+          ),
+        }
+      })
+    },
+  })
+}

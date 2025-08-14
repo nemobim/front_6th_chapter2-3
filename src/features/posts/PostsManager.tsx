@@ -9,7 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/shared/ui/table"
 
 import { useGetTags } from "./hooks"
-import { useAddComment, useDeleteComment, useGetComments, useUpdateComment } from "./hooks/useComment"
+import { useAddComment, useDeleteComment, useGetComments, useLikeComment, useUpdateComment } from "./hooks/useComment"
 import { useAddPost, useDeletePost, useGetPosts, useUpdatePost } from "./hooks/usePost"
 import { changePostSearchParams, DEFAULT_POST_SEARCH_PARAMS } from "./lib/postSearchUtils"
 import { AddComment, UpdateComment } from "./types/comment"
@@ -197,24 +197,21 @@ const PostsManager = () => {
     )
   }
 
+  const { mutate: likeComment } = useLikeComment()
   // 댓글 좋아요
-  const likeComment = async (id, postId) => {
-    try {
-      const response = await fetch(`/api/comments/${id}`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ likes: comments[postId].find((c) => c.id === id).likes + 1 }),
-      })
-      const data = await response.json()
-      // setComments((prev) => ({
-      //   ...prev,
-      //   [postId]: prev[postId].map((comment) =>
-      //     comment.id === data.id ? { ...data, likes: comment.likes + 1 } : comment,
-      //   ),
-      // }))
-    } catch (error) {
-      console.error("댓글 좋아요 오류:", error)
-    }
+  const handleLikeComment = (id: number, postId: number, currentLikes: number) => {
+    likeComment(
+      {
+        id,
+        currentLikes,
+        postId,
+      },
+      {
+        onSuccess: () => {
+          setShowEditCommentDialog(false)
+        },
+      },
+    )
   }
 
   // 게시물 상세 보기
@@ -351,7 +348,7 @@ const PostsManager = () => {
               <span className="truncate">{highlightText(comment.body, searchCondition.search)}</span>
             </div>
             <div className="flex items-center space-x-1">
-              <Button onClick={() => likeComment(comment.id, postId)} size="sm" variant="ghost">
+              <Button onClick={() => handleLikeComment(comment.id, postId, comment.likes)} size="sm" variant="ghost">
                 <ThumbsUp className="w-3 h-3" />
                 <span className="ml-1 text-xs">{comment.likes}</span>
               </Button>
