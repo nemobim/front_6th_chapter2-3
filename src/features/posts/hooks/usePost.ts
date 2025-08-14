@@ -5,6 +5,7 @@ import { postsApi, userApi } from "../api"
 import { postQueryKeys } from "../lib"
 import { PostSearchParams, PostsResponse } from "../types/post"
 
+/** 게시물 목록 조회 */
 export const useGetPosts = (params: PostSearchParams) => {
   const queryKey = postQueryKeys.posts.list(params)
 
@@ -67,22 +68,43 @@ export const useGetPosts = (params: PostSearchParams) => {
   }
 }
 
+/** 게시물 추가 */
 export const useAddPost = (params: PostSearchParams) => {
   const queryClient = useQueryClient()
 
   return useMutation({
     mutationFn: postsApi.addPost,
-    onSuccess: (_, data) => {
+    onSuccess: (postData) => {
       queryClient.setQueryData(postQueryKeys.posts.list(params), (oldData: PostsResponse) => {
         return {
           ...oldData,
-          posts: [{ ...data, id: oldData.posts.length + 1 }, ...oldData.posts],
+          posts: [{ ...postData, id: oldData.posts.length + 1 }, ...oldData.posts],
           total: oldData.total + 1,
         }
       })
     },
     onError: (error) => {
       console.error("게시물 추가 실패:", error)
+    },
+  })
+}
+
+/** 게시물 수정 */
+export const useUpdatePost = (params: PostSearchParams) => {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: postsApi.updatePost,
+    onSuccess: (updatedPost) => {
+      queryClient.setQueryData(postQueryKeys.posts.list(params), (oldData: PostsResponse) => {
+        return {
+          ...oldData,
+          posts: oldData.posts.map((post) => (post.id === updatedPost.id ? updatedPost : post)),
+        }
+      })
+    },
+    onError: (error) => {
+      console.error("게시물 수정 실패:", error)
     },
   })
 }

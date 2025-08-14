@@ -29,6 +29,13 @@ export interface AddPost {
   userId: number
 }
 
+export interface AddPostResponse extends AddPost {
+  body: string
+  id: number
+  title: string
+  userId: number
+}
+
 /**게시물 목록 파라미터 */
 export interface PostsParams {
   limit?: number
@@ -37,7 +44,21 @@ export interface PostsParams {
   sortBy?: string
 }
 
+/**게시물 검색 파라미터 */
 export interface PostSearchParams extends PostsParams {
   search?: string
   tag?: string
+}
+
+/**게시물 수정 */
+export interface UpdatePost {
+  body: string
+  id: number
+  title: string
+}
+
+export interface UpdatePostResponse extends UpdatePost {
+  reactions: Reactions
+  tags: string[]
+  userId: number
 }

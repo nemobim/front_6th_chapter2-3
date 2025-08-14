@@ -9,9 +9,9 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/shared/ui/table"
 
 import { useGetTags } from "./hooks"
-import { useAddPost, useGetPosts } from "./hooks/usePost"
+import { useAddPost, useGetPosts, useUpdatePost } from "./hooks/usePost"
 import { changePostSearchParams, DEFAULT_POST_SEARCH_PARAMS } from "./lib/postSearchUtils"
-import { PostSearchParams } from "./types/post"
+import { PostSearchParams, UpdatePost } from "./types/post"
 
 const PostsManager = () => {
   // URL 파라미터 관리 - 초기값을 기본값으로 설정
@@ -21,7 +21,7 @@ const PostsManager = () => {
   const [searchInput, setSearchInput] = useState(searchCondition.search)
 
   // 기타 상태 관리
-  const [selectedPost, setSelectedPost] = useState(null)
+  const [selectedPost, setSelectedPost] = useState<UpdatePost | null>(null)
   const [showAddDialog, setShowAddDialog] = useState(false)
   const [showEditDialog, setShowEditDialog] = useState(false)
   const [newPost, setNewPost] = useState({ title: "", body: "", userId: 1 })
@@ -129,20 +129,16 @@ const PostsManager = () => {
     })
   }
 
+  const { mutate: updatePost } = useUpdatePost(changePostSearchParams(searchCondition))
+
   // 게시물 업데이트
-  const updatePost = async () => {
-    try {
-      const response = await fetch(`/api/posts/${selectedPost.id}`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(selectedPost),
-      })
-      const data = await response.json()
-      // TODO: React Query mutation으로 변경 필요
-      setShowEditDialog(false)
-    } catch (error) {
-      console.error("게시물 업데이트 오류:", error)
-    }
+  const handleUpdatePost = () => {
+    if (!selectedPost) return
+    updatePost(selectedPost, {
+      onSuccess: () => {
+        setShowEditDialog(false)
+      },
+    })
   }
 
   // 게시물 삭제
@@ -594,7 +590,7 @@ const PostsManager = () => {
               rows={15}
               value={selectedPost?.body || ""}
             />
-            <Button onClick={updatePost}>게시물 업데이트</Button>
+            <Button onClick={handleUpdatePost}>게시물 업데이트</Button>
           </div>
         </DialogContent>
       </Dialog>

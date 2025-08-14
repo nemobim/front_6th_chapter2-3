@@ -1,7 +1,7 @@
 import { http } from "@/shared/lib"
 
 import { PostsResponse } from "../types"
-import { AddPost, PostsParams } from "../types/post"
+import { AddPost, AddPostResponse, PostsParams, UpdatePost, UpdatePostResponse } from "../types/post"
 
 export const postsApi = {
   getPosts: (params?: PostsParams) =>
@@ -21,5 +21,6 @@ export const postsApi = {
     http.get<PostsResponse>(`/posts/tag/${tag}`, {
       params,
     }),
-  addPost: (postData: AddPost) => http.post<AddPost>(`/posts/add`, postData),
+  addPost: (postData: AddPost) => http.post<AddPost, AddPostResponse>(`/posts/add`, postData),
+  updatePost: (postData: UpdatePost) => http.put<UpdatePost, UpdatePostResponse>(`/posts/${postData.id}`, postData),
 }
