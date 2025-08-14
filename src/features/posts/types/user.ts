@@ -1,4 +1,4 @@
-import { PageData } from "./page"
+import { PageData } from "@/shared/types"
 
 /**사용자 정보 */
 export interface User {

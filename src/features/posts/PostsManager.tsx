@@ -1,12 +1,13 @@
-import { Edit2, MessageSquare, Plus, Search, ThumbsDown, ThumbsUp, Trash2 } from "lucide-react"
+import { Edit2, Plus, Search, ThumbsUp, Trash2 } from "lucide-react"
 import { useState } from "react"
 
+import { PostTable } from "@/entities/post/ui"
 import { useSearchQuery } from "@/shared/hook"
+import { highlightText } from "@/shared/lib/utils"
 import { Button, Input, Textarea } from "@/shared/ui"
 import { Card, CardContent, CardHeader, CardTitle } from "@/shared/ui/card"
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/shared/ui/dialog"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/shared/ui/select"
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/shared/ui/table"
 
 import { useGetTags } from "./hooks"
 import { useAddComment, useDeleteComment, useGetComments, useLikeComment, useUpdateComment } from "./hooks/useComment"
@@ -222,6 +223,7 @@ const PostsManager = () => {
 
   // 사용자 모달 열기
   const openUserModal = async (user) => {
+    console.log("user", user)
     try {
       const response = await fetch(`/api/users/${user.id}`)
       const userData = await response.json()
@@ -232,96 +234,17 @@ const PostsManager = () => {
     }
   }
 
-  // 하이라이트 함수 추가
-  const highlightText = (text: string, highlight: string) => {
-    if (!text) return null
-    if (!highlight.trim()) {
-      return <span>{text}</span>
-    }
-    const regex = new RegExp(`(${highlight})`, "gi")
-    const parts = text.split(regex)
-    return (
-      <span>
-        {parts.map((part, i) => (regex.test(part) ? <mark key={i}>{part}</mark> : <span key={i}>{part}</span>))}
-      </span>
-    )
-  }
-
   // 게시물 테이블 렌더링
   const renderPostTable = () => (
-    <Table>
-      <TableHeader>
-        <TableRow>
-          <TableHead className="w-[50px]">ID</TableHead>
-          <TableHead>제목</TableHead>
-          <TableHead className="w-[150px]">작성자</TableHead>
-          <TableHead className="w-[150px]">반응</TableHead>
-          <TableHead className="w-[150px]">작업</TableHead>
-        </TableRow>
-      </TableHeader>
-      <TableBody>
-        {posts.map((post) => (
-          <TableRow key={post.id}>
-            <TableCell>{post.id}</TableCell>
-            <TableCell>
-              <div className="space-y-1">
-                <div>{highlightText(post.title, searchCondition.search)}</div>
-
-                <div className="flex flex-wrap gap-1">
-                  {post.tags?.map((tag) => (
-                    <span
-                      className={`px-1 text-[9px] font-semibold rounded-[4px] cursor-pointer ${
-                        searchCondition.tag === tag
-                          ? "text-white bg-blue-500 hover:bg-blue-600"
-                          : "text-blue-800 bg-blue-100 hover:bg-blue-200"
-                      }`}
-                      key={tag}
-                      onClick={() => handleTagChange(tag)}
-                    >
-                      {tag}
-                    </span>
-                  ))}
-                </div>
-              </div>
-            </TableCell>
-            <TableCell>
-              <div className="flex items-center space-x-2 cursor-pointer" onClick={() => openUserModal(post.author)}>
-                <img alt={post.author?.username} className="w-8 h-8 rounded-full" src={post.author?.image} />
-                <span>{post.author?.username}</span>
-              </div>
-            </TableCell>
-            <TableCell>
-              <div className="flex items-center gap-2">
-                <ThumbsUp className="w-4 h-4" />
-                <span>{post.reactions?.likes || 0}</span>
-                <ThumbsDown className="w-4 h-4" />
-                <span>{post.reactions?.dislikes || 0}</span>
-              </div>
-            </TableCell>
-            <TableCell>
-              <div className="flex items-center gap-2">
-                <Button onClick={() => openPostDetail(post)} size="sm" variant="ghost">
-                  <MessageSquare className="w-4 h-4" />
-                </Button>
-                <Button
-                  onClick={() => {
-                    setSelectedPost(post)
-                    setShowEditDialog(true)
-                  }}
-                  size="sm"
-                  variant="ghost"
-                >
-                  <Edit2 className="w-4 h-4" />
-                </Button>
-                <Button onClick={() => handleDeletePost(post.id)} size="sm" variant="ghost">
-                  <Trash2 className="w-4 h-4" />
-                </Button>
-              </div>
-            </TableCell>
-          </TableRow>
-        ))}
-      </TableBody>
-    </Table>
+    <PostTable
+      onDeletePost={handleDeletePost}
+      onEditPost={handleUpdatePost}
+      onPostDetail={openPostDetail}
+      onTagClick={handleTagChange}
+      onUserClick={openUserModal}
+      posts={posts}
+      searchCondition={searchCondition}
+    />
   )
 
   // 댓글 렌더링

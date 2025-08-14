@@ -1,4 +1,5 @@
-import { PageData } from "./page"
+import { User } from "@/features/posts/types"
+import { PageData } from "@/shared/types"
 
 /**게시물 좋아요, 싫어요 수 */
 export interface Reactions {
@@ -6,7 +7,7 @@ export interface Reactions {
   likes: number
 }
 
-/**게시물 정보 */
+/** post 정보 */
 export interface Post {
   body: string
   id: number
@@ -15,6 +16,11 @@ export interface Post {
   title: string
   userId: number
   views: number
+}
+
+/** post 테이블 컬럼 */
+export interface PostWithUser extends Post {
+  author?: User
 }
 
 /**게시물 목록 응답 */
