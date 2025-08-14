@@ -3,17 +3,17 @@ import { useState } from "react"
 
 import { PostTable } from "@/entities/post/ui"
 import { CommentManagement } from "@/features/comment-management/ui/CommentManagement"
+import { PostDialogs } from "@/features/post-management/ui"
+import { useGetTags } from "@/features/posts/hooks"
+import { useAddPost, useDeletePost, useGetPosts, useUpdatePost } from "@/features/posts/hooks/usePost"
+import { changePostSearchParams, DEFAULT_POST_SEARCH_PARAMS } from "@/features/posts/lib/postSearchUtils"
+import { AddPost, PostSearchParams, UpdatePost } from "@/features/posts/types/post"
 import { useSearchQuery } from "@/shared/hook"
 import { highlightText } from "@/shared/lib/utils"
-import { Button, Input, Textarea } from "@/shared/ui"
+import { Button, Input } from "@/shared/ui"
 import { Card, CardContent, CardHeader, CardTitle } from "@/shared/ui/card"
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/shared/ui/dialog"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/shared/ui/select"
-
-import { useGetTags } from "../../features/posts/hooks"
-import { useAddPost, useDeletePost, useGetPosts, useUpdatePost } from "../../features/posts/hooks/usePost"
-import { changePostSearchParams, DEFAULT_POST_SEARCH_PARAMS } from "../../features/posts/lib/postSearchUtils"
-import { AddPost, PostSearchParams, UpdatePost } from "../../features/posts/types/post"
 
 const PostsManager = () => {
   // URL 파라미터 관리
@@ -169,11 +169,17 @@ const PostsManager = () => {
     }
   }
 
-  // 게시물 테이블 렌더링
+  // 게시물 수정 다이얼로그 열기 (테이블에서 수정 버튼 클릭 시)
+  const openEditDialog = (post: UpdatePost) => {
+    setSelectedPost(post)
+    setShowEditDialog(true)
+  }
+
+  // 게시물 테이블 렌더링 - onEditPost를 openEditDialog로 변경
   const renderPostTable = () => (
     <PostTable
       onDeletePost={handleDeletePost}
-      onEditPost={handleUpdatePost}
+      onEditPost={openEditDialog}
       onPostDetail={openPostDetail}
       onTagClick={handleTagChange}
       onUserClick={openUserModal}
@@ -327,57 +333,19 @@ const PostsManager = () => {
         </div>
       </CardContent>
 
-      {/* 게시물 추가 대화상자 */}
-      <Dialog onOpenChange={setShowAddDialog} open={showAddDialog}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>새 게시물 추가</DialogTitle>
-          </DialogHeader>
-          <div className="space-y-4">
-            <Input
-              onChange={(e) => setNewPost({ ...newPost, title: e.target.value })}
-              placeholder="제목"
-              value={newPost?.title || ""}
-            />
-            <Textarea
-              onChange={(e) => setNewPost({ ...newPost, body: e.target.value })}
-              placeholder="내용"
-              rows={30}
-              value={newPost?.body || ""}
-            />
-            <Input
-              onChange={(e) => setNewPost({ ...newPost, userId: Number(e.target.value) })}
-              placeholder="사용자 ID"
-              type="number"
-              value={newPost?.userId || ""}
-            />
-            <Button onClick={handleAddPost}>게시물 추가</Button>
-          </div>
-        </DialogContent>
-      </Dialog>
-
-      {/* 게시물 수정 대화상자 */}
-      <Dialog onOpenChange={setShowEditDialog} open={showEditDialog}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>게시물 수정</DialogTitle>
-          </DialogHeader>
-          <div className="space-y-4">
-            <Input
-              onChange={(e) => setSelectedPost({ ...selectedPost, title: e.target.value })}
-              placeholder="제목"
-              value={selectedPost?.title || ""}
-            />
-            <Textarea
-              onChange={(e) => setSelectedPost({ ...selectedPost, body: e.target.value })}
-              placeholder="내용"
-              rows={15}
-              value={selectedPost?.body || ""}
-            />
-            <Button onClick={handleUpdatePost}>게시물 업데이트</Button>
-          </div>
-        </DialogContent>
-      </Dialog>
+      {/* PostDialogs 컴포넌트 사용 */}
+      <PostDialogs
+        newPost={newPost}
+        onAddPost={handleAddPost}
+        onUpdatePost={handleUpdatePost}
+        selectedPost={selectedPost}
+        setNewPost={setNewPost}
+        setSelectedPost={setSelectedPost}
+        setShowAddDialog={setShowAddDialog}
+        setShowEditDialog={setShowEditDialog}
+        showAddDialog={showAddDialog}
+        showEditDialog={showEditDialog}
+      />
 
       {/* 게시물 상세 보기 대화상자 - CommentManagement 사용 */}
       <Dialog onOpenChange={setShowPostDetailDialog} open={showPostDetailDialog}>
