@@ -2,22 +2,21 @@ import { Plus } from "lucide-react"
 import { useState } from "react"
 
 import { PostTable } from "@/entities/post/ui"
-import { CommentManagement } from "@/features/comment-management/ui/CommentManagement"
+import { PostPagination } from "@/features/pagination-management/ui"
 import { PostDialogs } from "@/features/post-management/ui"
 import { useGetTags } from "@/features/posts/hooks"
 import { useAddPost, useDeletePost, useGetPosts, useUpdatePost } from "@/features/posts/hooks/usePost"
 import { changePostSearchParams, DEFAULT_POST_SEARCH_PARAMS } from "@/features/posts/lib/postSearchUtils"
 import { AddPost, PostSearchParams, UpdatePost } from "@/features/posts/types/post"
+import { ActiveFilters, SearchControls } from "@/features/search-management/ui"
+import { useUser } from "@/features/user-management/hooks"
+import { UserModal } from "@/features/user-management/ui/UserModal"
 import { useSearchQuery } from "@/shared/hook"
-import { highlightText } from "@/shared/lib/utils"
 import { Button } from "@/shared/ui"
 import { Card, CardContent, CardHeader, CardTitle } from "@/shared/ui/card"
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/shared/ui/dialog"
 
-import { PostPagination } from "../../features/pagination-management/ui"
-import { ActiveFilters, SearchControls } from "../../features/search-management/ui"
-import { useUser } from "../../features/user-management/hooks"
-import { UserModal } from "../../features/user-management/ui"
+import { usePostDetail } from "../../features/post-detail/hooks"
+import { PostDetailModal } from "../../features/post-detail/ui"
 
 const PostsManager = () => {
   // URL 파라미터 관리
@@ -31,9 +30,16 @@ const PostsManager = () => {
   const [selectedPost, setSelectedPost] = useState<UpdatePost | null>(null)
   const [showAddDialog, setShowAddDialog] = useState(false)
   const [showEditDialog, setShowEditDialog] = useState(false)
-  const [showPostDetailDialog, setShowPostDetailDialog] = useState(false)
   // User 관련 상태 제거하고 useUser 훅 사용
   const { selectedUser, showUserModal, openUserModal, closeUserModal } = useUser()
+
+  // Post 상세 보기 관련 상태 제거하고 usePostDetail 훅 사용
+  const {
+    selectedPost: postDetailSelectedPost,
+    showPostDetailDialog,
+    openPostDetail,
+    closePostDetail,
+  } = usePostDetail()
 
   // React Query 훅 사용
   const { posts, total, isLoading } = useGetPosts(changePostSearchParams(searchCondition))
@@ -154,12 +160,6 @@ const PostsManager = () => {
     })
   }
 
-  // 게시물 상세 보기
-  const openPostDetail = (post) => {
-    setSelectedPost(post)
-    setShowPostDetailDialog(true)
-  }
-
   // 게시물 수정 다이얼로그 열기 (테이블에서 수정 버튼 클릭 시)
   const openEditDialog = (post: UpdatePost) => {
     setSelectedPost(post)
@@ -235,18 +235,13 @@ const PostsManager = () => {
         showEditDialog={showEditDialog}
       />
 
-      {/* 게시물 상세 보기 대화상자 - CommentManagement 사용 */}
-      <Dialog onOpenChange={setShowPostDetailDialog} open={showPostDetailDialog}>
-        <DialogContent className="max-w-3xl">
-          <DialogHeader>
-            <DialogTitle>{highlightText(selectedPost?.title, searchCondition.search)}</DialogTitle>
-          </DialogHeader>
-          <div className="space-y-4">
-            <p>{highlightText(selectedPost?.body, searchCondition.search)}</p>
-            <CommentManagement postId={selectedPost?.id} searchTerm={searchCondition.search} />
-          </div>
-        </DialogContent>
-      </Dialog>
+      {/* PostDetailModal 컴포넌트 사용 */}
+      <PostDetailModal
+        onOpenChange={closePostDetail}
+        open={showPostDetailDialog}
+        post={postDetailSelectedPost}
+        searchTerm={searchCondition.search}
+      />
 
       {/* UserModal 컴포넌트 사용 */}
       <UserModal onOpenChange={closeUserModal} open={showUserModal} user={selectedUser} />
