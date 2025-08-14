@@ -1,4 +1,4 @@
-import { Plus, Search } from "lucide-react"
+import { Plus } from "lucide-react"
 import { useState } from "react"
 
 import { PostTable } from "@/entities/post/ui"
@@ -10,10 +10,12 @@ import { changePostSearchParams, DEFAULT_POST_SEARCH_PARAMS } from "@/features/p
 import { AddPost, PostSearchParams, UpdatePost } from "@/features/posts/types/post"
 import { useSearchQuery } from "@/shared/hook"
 import { highlightText } from "@/shared/lib/utils"
-import { Button, Input } from "@/shared/ui"
+import { Button } from "@/shared/ui"
 import { Card, CardContent, CardHeader, CardTitle } from "@/shared/ui/card"
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/shared/ui/dialog"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/shared/ui/select"
+
+import { ActiveFilters, SearchControls } from "../../features/search-management/ui"
 
 const PostsManager = () => {
   // URL 파라미터 관리
@@ -100,7 +102,7 @@ const PostsManager = () => {
   const handleSortOrderChange = (value: string) => {
     setSearchCondition((prev) => ({
       ...prev,
-      sortOrder: value,
+      order: value,
       skip: 0,
     }))
   }
@@ -202,94 +204,20 @@ const PostsManager = () => {
       <CardContent>
         <div className="flex flex-col gap-4">
           {/* 검색 및 필터 컨트롤 */}
-          <div className="flex gap-4">
-            <div className="flex-1">
-              <div className="relative">
-                <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
-                <Input
-                  className="pl-8"
-                  onChange={(e) => handleSearchInputChange(e.target.value)}
-                  onKeyPress={handleKeyPress}
-                  placeholder="게시물 검색... (엔터로 검색)"
-                  value={searchInput}
-                />
-              </div>
-            </div>
+          <SearchControls
+            onKeyPress={handleKeyPress}
+            onSearchInputChange={handleSearchInputChange}
+            onSearchSubmit={handleSearchSubmit}
+            onSortByChange={handleSortByChange}
+            onSortOrderChange={handleSortOrderChange}
+            onTagChange={handleTagChange}
+            searchCondition={searchCondition}
+            searchInput={searchInput}
+            tags={tags}
+          />
 
-            {/* 검색 중일 때 태그 선택 비활성화 */}
-            <Select disabled={!!searchCondition.search} onValueChange={handleTagChange} value={searchCondition.tag}>
-              <SelectTrigger className="w-[180px]">
-                <SelectValue placeholder="태그 선택" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">모든 태그</SelectItem>
-                {tags?.map((tag) => (
-                  <SelectItem key={tag.url} value={tag.slug}>
-                    {tag.slug}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-
-            {/* 검색 중이거나 태그 필터링 중일 때 정렬 비활성화 */}
-            <Select
-              disabled={!!searchCondition.search || searchCondition.tag !== "all"}
-              onValueChange={handleSortByChange}
-              value={searchCondition.sortBy || "none"}
-            >
-              <SelectTrigger className="w-[180px]">
-                <SelectValue placeholder="정렬 기준" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="none">없음</SelectItem>
-                <SelectItem value="id">ID</SelectItem>
-                <SelectItem value="title">제목</SelectItem>
-                <SelectItem value="reactions">반응</SelectItem>
-              </SelectContent>
-            </Select>
-
-            {/* 정렬 기준이 없거나 다른 필터가 활성화된 경우 정렬 순서 비활성화 */}
-            <Select
-              disabled={
-                !!searchCondition.search ||
-                searchCondition.tag !== "all" ||
-                !searchCondition.sortBy ||
-                searchCondition.sortBy === "none"
-              }
-              onValueChange={handleSortOrderChange}
-              value={searchCondition.sortOrder}
-            >
-              <SelectTrigger className="w-[180px]">
-                <SelectValue placeholder="정렬 순서" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="asc">오름차순</SelectItem>
-                <SelectItem value="desc">내림차순</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-
-          {/* 현재 활성화된 필터 표시--------------------------- */}
-          {(searchCondition.search ||
-            searchCondition.tag !== "all" ||
-            (searchCondition.sortBy && searchCondition.sortBy !== "none")) && (
-            <div className="flex gap-2 text-sm">
-              {searchCondition.search && (
-                <span className="px-2 py-1 bg-blue-100 text-blue-800 rounded">검색: "{searchCondition.search}"</span>
-              )}
-              {searchCondition.tag !== "all" && !searchCondition.search && (
-                <span className="px-2 py-1 bg-green-100 text-green-800 rounded">태그: {searchCondition.tag}</span>
-              )}
-              {searchCondition.sortBy &&
-                searchCondition.sortBy !== "none" &&
-                !searchCondition.search &&
-                searchCondition.tag === "all" && (
-                  <span className="px-2 py-1 bg-purple-100 text-purple-800 rounded">
-                    정렬: {searchCondition.sortBy} ({searchCondition.sortOrder})
-                  </span>
-                )}
-            </div>
-          )}
+          {/* 현재 활성화된 필터 표시 */}
+          <ActiveFilters searchCondition={searchCondition} />
 
           {/* 게시물 테이블 */}
           {isLoading ? <div className="flex justify-center p-4">로딩 중...</div> : renderPostTable()}
