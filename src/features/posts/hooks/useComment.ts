@@ -54,3 +54,23 @@ export const useUpdateComment = () => {
     },
   })
 }
+
+/** 댓글 삭제 */
+export const useDeleteComment = () => {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: ({ id }: { id: number; postId: number }) => commentApi.deleteComment(id),
+    onSuccess: ({ id, postId }: { id: number; postId: number }) => {
+      queryClient.setQueryData(postQueryKeys.comments.list(postId), (oldData: CommentResponse) => {
+        return {
+          ...oldData,
+          comments: oldData.comments.filter((comment) => comment.id !== id),
+        }
+      })
+    },
+    onError: (error) => {
+      console.error("댓글 삭제 실패:", error)
+    },
+  })
+}

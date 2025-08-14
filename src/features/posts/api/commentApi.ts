@@ -7,4 +7,5 @@ export const commentApi = {
   addComment: (comment: AddComment) => http.post<AddComment, AddCommentResponse>(`/comments/add`, comment),
   updateComment: (comment: UpdateComment) =>
     http.put<UpdateCommentRequest, UpdateComment>(`/comments/${comment.id}`, { body: comment.body }),
+  deleteComment: (id: number) => http.del<{ id: number; postId: number }>(`/comments/${id}`),
 }

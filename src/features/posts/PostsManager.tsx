@@ -9,7 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/shared/ui/table"
 
 import { useGetTags } from "./hooks"
-import { useAddComment, useGetComments, useUpdateComment } from "./hooks/useComment"
+import { useAddComment, useDeleteComment, useGetComments, useUpdateComment } from "./hooks/useComment"
 import { useAddPost, useDeletePost, useGetPosts, useUpdatePost } from "./hooks/usePost"
 import { changePostSearchParams, DEFAULT_POST_SEARCH_PARAMS } from "./lib/postSearchUtils"
 import { AddComment, UpdateComment } from "./types/comment"
@@ -184,19 +184,17 @@ const PostsManager = () => {
     })
   }
 
+  const { mutate: deleteComment } = useDeleteComment()
   // 댓글 삭제
-  const deleteComment = async (id, postId) => {
-    try {
-      await fetch(`/api/comments/${id}`, {
-        method: "DELETE",
-      })
-      // setComments((prev) => ({
-      //   ...prev,
-      //   [postId]: prev[postId].filter((comment) => comment.id !== id),
-      // }))
-    } catch (error) {
-      console.error("댓글 삭제 오류:", error)
-    }
+  const handleDeleteComment = (id: number, postId: number) => {
+    deleteComment(
+      { id, postId },
+      {
+        onSuccess: () => {
+          setShowEditCommentDialog(false)
+        },
+      },
+    )
   }
 
   // 댓글 좋아요
@@ -367,7 +365,7 @@ const PostsManager = () => {
               >
                 <Edit2 className="w-3 h-3" />
               </Button>
-              <Button onClick={() => deleteComment(comment.id, postId)} size="sm" variant="ghost">
+              <Button onClick={() => handleDeleteComment(comment.id, postId)} size="sm" variant="ghost">
                 <Trash2 className="w-3 h-3" />
               </Button>
             </div>
