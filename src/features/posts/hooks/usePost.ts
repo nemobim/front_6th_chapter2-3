@@ -17,26 +17,31 @@ export const useGetPosts = (params: {
   const queryFn = () => {
     // 검색어가 있으면 검색 API 사용 (태그 무시)
     if (params.search && params.search.trim()) {
-      return postsApi.searchPosts(params.search)
-    }
-
-    // 태그가 있고 "all"이 아니면 태그 API 사용
-    if (params.tag && params.tag !== "all") {
-      return postsApi.getPostsByTag(params.tag)
-    }
-
-    // 정렬이 있고 "none"이 아니면 정렬 API 사용
-    if (params.sortBy && params.sortBy !== "none" && params.sortOrder) {
-      return postsApi.getPostsSorted({
+      return postsApi.searchPosts(params.search, {
         limit: params.limit,
         skip: params.skip,
-        sortBy: params.sortBy,
+        sortBy: params.sortBy !== "none" ? params.sortBy : undefined,
         order: params.sortOrder,
       })
     }
 
-    // 기본 posts API 사용
-    return postsApi.getPosts({ limit: params.limit, skip: params.skip })
+    // 태그가 있고 "all"이 아니면 태그 API 사용
+    if (params.tag && params.tag !== "all") {
+      return postsApi.getPostsByTag(params.tag, {
+        limit: params.limit,
+        skip: params.skip,
+        sortBy: params.sortBy !== "none" ? params.sortBy : undefined,
+        order: params.sortOrder,
+      })
+    }
+
+    // 기본 posts API 사용 (정렬 포함)
+    return postsApi.getPosts({
+      limit: params.limit,
+      skip: params.skip,
+      sortBy: params.sortBy !== "none" ? params.sortBy : undefined,
+      order: params.sortOrder,
+    })
   }
 
   const postsQuery = useQuery({
