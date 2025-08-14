@@ -108,3 +108,24 @@ export const useUpdatePost = (params: PostSearchParams) => {
     },
   })
 }
+
+/** 게시물 삭제 */
+export const useDeletePost = (params: PostSearchParams) => {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: postsApi.deletePost,
+    onSuccess: (_, deletedPostId) => {
+      queryClient.setQueryData(postQueryKeys.posts.list(params), (oldData: PostsResponse) => {
+        return {
+          ...oldData,
+          posts: oldData.posts.filter((post) => post.id !== deletedPostId),
+          total: oldData.total - 1,
+        }
+      })
+    },
+    onError: (error) => {
+      console.error("게시물 삭제 실패:", error)
+    },
+  })
+}

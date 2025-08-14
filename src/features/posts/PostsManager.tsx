@@ -9,7 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/shared/ui/table"
 
 import { useGetTags } from "./hooks"
-import { useAddPost, useGetPosts, useUpdatePost } from "./hooks/usePost"
+import { useAddPost, useDeletePost, useGetPosts, useUpdatePost } from "./hooks/usePost"
 import { changePostSearchParams, DEFAULT_POST_SEARCH_PARAMS } from "./lib/postSearchUtils"
 import { PostSearchParams, UpdatePost } from "./types/post"
 
@@ -141,16 +141,15 @@ const PostsManager = () => {
     })
   }
 
+  const { mutate: deletePost } = useDeletePost(changePostSearchParams(searchCondition))
+
   // 게시물 삭제
-  const deletePost = async (id) => {
-    try {
-      await fetch(`/api/posts/${id}`, {
-        method: "DELETE",
-      })
-      // TODO: React Query mutation으로 변경 필요
-    } catch (error) {
-      console.error("게시물 삭제 오류:", error)
-    }
+  const handleDeletePost = (id: number) => {
+    deletePost(id, {
+      onSuccess: () => {
+        setShowEditDialog(false)
+      },
+    })
   }
 
   // 댓글 가져오기
@@ -339,7 +338,7 @@ const PostsManager = () => {
                 >
                   <Edit2 className="w-4 h-4" />
                 </Button>
-                <Button onClick={() => deletePost(post.id)} size="sm" variant="ghost">
+                <Button onClick={() => handleDeletePost(post.id)} size="sm" variant="ghost">
                   <Trash2 className="w-4 h-4" />
                 </Button>
               </div>

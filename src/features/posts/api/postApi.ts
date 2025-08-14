@@ -23,4 +23,5 @@ export const postsApi = {
     }),
   addPost: (postData: AddPost) => http.post<AddPost, AddPostResponse>(`/posts/add`, postData),
   updatePost: (postData: UpdatePost) => http.put<UpdatePost, UpdatePostResponse>(`/posts/${postData.id}`, postData),
+  deletePost: (id: number) => http.del(`/posts/${id}`),
 }
