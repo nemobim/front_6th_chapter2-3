@@ -1,2 +1,2 @@
-export { api } from "./axios-instance"
-export { http } from "./https"
+export { api } from "./api"
+export { http } from "./http"

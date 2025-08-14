@@ -1,6 +1,6 @@
 import { AxiosRequestConfig } from "axios"
 
-import { api } from "./axios-instance"
+import { api } from "@/shared/lib/api"
 
 export const http = {
   get: async <Response = unknown>(url: string, options: AxiosRequestConfig = {}) => {

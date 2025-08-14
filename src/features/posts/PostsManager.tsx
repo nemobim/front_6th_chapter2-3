@@ -9,18 +9,13 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/shared/ui/table"
 
 import { useGetTags } from "./hooks"
-import { useGetPosts } from "./hooks/usePost"
+import { useAddPost, useGetPosts } from "./hooks/usePost"
+import { changePostSearchParams, DEFAULT_POST_SEARCH_PARAMS } from "./lib/postSearchUtils"
+import { PostSearchParams } from "./types/post"
 
 const PostsManager = () => {
   // URL 파라미터 관리 - 초기값을 기본값으로 설정
-  const { searchCondition, setSearchCondition } = useSearchQuery({
-    skip: 0,
-    limit: 10,
-    search: "",
-    tag: "all",
-    sortBy: "none",
-    sortOrder: "asc",
-  })
+  const { searchCondition, setSearchCondition } = useSearchQuery<PostSearchParams>(DEFAULT_POST_SEARCH_PARAMS)
 
   // 검색어 입력 임시 상태 (엔터 전까지)
   const [searchInput, setSearchInput] = useState(searchCondition.search)
@@ -40,14 +35,7 @@ const PostsManager = () => {
   const [selectedUser, setSelectedUser] = useState(null)
 
   // React Query 훅 사용
-  const { posts, total, isLoading } = useGetPosts({
-    limit: searchCondition.limit,
-    skip: searchCondition.skip,
-    search: searchCondition.search,
-    tag: searchCondition.tag === "all" ? undefined : searchCondition.tag, // "all"이면 undefined로
-    sortBy: searchCondition.sortBy === "none" ? undefined : searchCondition.sortBy, // "none"이면 undefined로
-    sortOrder: searchCondition.sortOrder,
-  })
+  const { posts, total, isLoading } = useGetPosts(changePostSearchParams(searchCondition))
 
   const { data: tags } = useGetTags()
 
@@ -60,7 +48,7 @@ const PostsManager = () => {
       // 검색 시 다른 모든 필터 초기화 (DummyJSON에서 검색과 다른 필터들은 동시에 지원하지 않음)
       tag: searchInput.trim() ? "all" : prev.tag,
       sortBy: searchInput.trim() ? "none" : prev.sortBy,
-      sortOrder: searchInput.trim() ? "asc" : prev.sortOrder,
+      order: searchInput.trim() ? "asc" : prev.order,
     }))
   }
 
@@ -86,7 +74,7 @@ const PostsManager = () => {
       // 태그 선택 시 검색어와 정렬 초기화
       search: tagValue !== "all" ? "" : prev.search,
       sortBy: tagValue !== "all" ? "none" : prev.sortBy,
-      sortOrder: tagValue !== "all" ? "asc" : prev.sortOrder,
+      order: tagValue !== "all" ? "asc" : prev.order,
     }))
     // 태그 변경 시 검색 입력도 초기화
     if (tagValue !== "all") {
@@ -130,21 +118,15 @@ const PostsManager = () => {
     setSearchCondition((prev) => ({ ...prev, limit, skip: 0 }))
   }
 
+  const { mutate: addPost } = useAddPost(changePostSearchParams(searchCondition))
   // 게시물 추가
-  const addPost = async () => {
-    try {
-      const response = await fetch("/api/posts/add", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(newPost),
-      })
-      const data = await response.json()
-      // TODO: React Query mutation으로 변경 필요
-      setShowAddDialog(false)
-      setNewPost({ title: "", body: "", userId: 1 })
-    } catch (error) {
-      console.error("게시물 추가 오류:", error)
-    }
+  const handleAddPost = () => {
+    addPost(newPost, {
+      onSuccess: () => {
+        setShowAddDialog(false)
+        setNewPost({ title: "", body: "", userId: 1 })
+      },
+    })
   }
 
   // 게시물 업데이트
@@ -589,7 +571,7 @@ const PostsManager = () => {
               type="number"
               value={newPost.userId}
             />
-            <Button onClick={addPost}>게시물 추가</Button>
+            <Button onClick={handleAddPost}>게시물 추가</Button>
           </div>
         </DialogContent>
       </Dialog>

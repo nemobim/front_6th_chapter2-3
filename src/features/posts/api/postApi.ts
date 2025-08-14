@@ -1,21 +1,15 @@
 import { http } from "@/shared/lib"
 
 import { PostsResponse } from "../types"
-
-interface GetPostsParams {
-  limit?: number
-  order?: string
-  skip?: number
-  sortBy?: string
-}
+import { AddPost, PostsParams } from "../types/post"
 
 export const postsApi = {
-  getPosts: (params?: GetPostsParams) =>
+  getPosts: (params?: PostsParams) =>
     http.get<PostsResponse>(`/posts`, {
       params,
     }),
 
-  searchPosts: (query: string, params?: GetPostsParams) =>
+  searchPosts: (query: string, params?: PostsParams) =>
     http.get<PostsResponse>(`/posts/search`, {
       params: {
         q: query,
@@ -23,8 +17,9 @@ export const postsApi = {
       },
     }),
 
-  getPostsByTag: (tag: string, params?: GetPostsParams) =>
+  getPostsByTag: (tag: string, params?: PostsParams) =>
     http.get<PostsResponse>(`/posts/tag/${tag}`, {
       params,
     }),
+  addPost: (postData: AddPost) => http.post<AddPost>(`/posts/add`, postData),
 }

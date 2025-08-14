@@ -1,18 +1,12 @@
-import { useQuery } from "@tanstack/react-query"
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import { useMemo } from "react"
 
 import { postsApi, userApi } from "../api"
 import { postQueryKeys } from "../lib"
+import { PostSearchParams, PostsResponse } from "../types/post"
 
-export const useGetPosts = (params: {
-  limit: number
-  search?: string
-  skip: number
-  sortBy?: string
-  sortOrder?: string
-  tag?: string
-}) => {
-  const queryKey = postQueryKeys.posts.listFilters(params)
+export const useGetPosts = (params: PostSearchParams) => {
+  const queryKey = postQueryKeys.posts.list(params)
 
   const queryFn = () => {
     // 검색어가 있으면 검색 API 사용 (태그 무시)
@@ -21,7 +15,7 @@ export const useGetPosts = (params: {
         limit: params.limit,
         skip: params.skip,
         sortBy: params.sortBy !== "none" ? params.sortBy : undefined,
-        order: params.sortOrder,
+        order: params.order,
       })
     }
 
@@ -31,7 +25,7 @@ export const useGetPosts = (params: {
         limit: params.limit,
         skip: params.skip,
         sortBy: params.sortBy !== "none" ? params.sortBy : undefined,
-        order: params.sortOrder,
+        order: params.order,
       })
     }
 
@@ -40,7 +34,7 @@ export const useGetPosts = (params: {
       limit: params.limit,
       skip: params.skip,
       sortBy: params.sortBy !== "none" ? params.sortBy : undefined,
-      order: params.sortOrder,
+      order: params.order,
     })
   }
 
@@ -71,4 +65,24 @@ export const useGetPosts = (params: {
     isLoading: postsQuery.isLoading || usersQuery.isLoading,
     error: postsQuery.error || usersQuery.error,
   }
+}
+
+export const useAddPost = (params: PostSearchParams) => {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: postsApi.addPost,
+    onSuccess: (_, data) => {
+      queryClient.setQueryData(postQueryKeys.posts.list(params), (oldData: PostsResponse) => {
+        return {
+          ...oldData,
+          posts: [{ ...data, id: oldData.posts.length + 1 }, ...oldData.posts],
+          total: oldData.total + 1,
+        }
+      })
+    },
+    onError: (error) => {
+      console.error("게시물 추가 실패:", error)
+    },
+  })
 }
