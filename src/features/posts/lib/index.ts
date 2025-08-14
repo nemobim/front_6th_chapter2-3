@@ -1,1 +1,1 @@
-export { postQueryKeys } from "./postQueryKeys"
+export { postQueryKeys } from "./queryKeys"

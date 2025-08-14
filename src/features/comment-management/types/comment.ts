@@ -1,4 +1,4 @@
-import { PageData } from "./page"
+import { PageData } from "@/shared/types"
 
 /** 댓글 */
 export interface Comment {

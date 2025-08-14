@@ -1,13 +1,13 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 
-import { commentApi } from "../api/commentApi"
-import { postQueryKeys } from "../lib"
-import { AddComment, CommentResponse, UpdateComment } from "../types/comment"
+import { commentApi } from "@/features/comment-management/api/commentApi"
+import { commentQueryKeys } from "@/features/comment-management/lib"
+import { AddComment, CommentResponse, UpdateComment } from "@/features/comment-management/types"
 
 /** 댓글 가져오기 */
 export const useGetComments = (postId?: number) => {
   return useQuery({
-    queryKey: postQueryKeys.comments.list(postId),
+    queryKey: commentQueryKeys.list(postId),
     queryFn: () => commentApi.getComments(postId),
     enabled: !!postId,
   })
@@ -20,7 +20,7 @@ export const useAddComment = () => {
   return useMutation({
     mutationFn: (comment: AddComment) => commentApi.addComment(comment),
     onSuccess: (commentData) => {
-      queryClient.setQueryData(postQueryKeys.comments.list(commentData.postId), (oldData: CommentResponse) => {
+      queryClient.setQueryData(commentQueryKeys.list(commentData.postId), (oldData: CommentResponse) => {
         return {
           ...oldData,
           comments: [...oldData.comments, commentData],
@@ -41,7 +41,7 @@ export const useUpdateComment = () => {
     mutationFn: (commentData: UpdateComment) => commentApi.updateComment(commentData),
     onSuccess: (updatedComment) => {
       // 해당 게시물의 댓글 목록 캐시 업데이트
-      queryClient.setQueryData(postQueryKeys.comments.list(updatedComment.postId), (oldData: CommentResponse) => {
+      queryClient.setQueryData(commentQueryKeys.list(updatedComment.postId), (oldData: CommentResponse) => {
         console.log(updatedComment, oldData)
         return {
           ...oldData,
@@ -62,7 +62,7 @@ export const useDeleteComment = () => {
   return useMutation({
     mutationFn: ({ id }: { id: number; postId: number }) => commentApi.deleteComment(id),
     onSuccess: ({ id, postId }: { id: number; postId: number }) => {
-      queryClient.setQueryData(postQueryKeys.comments.list(postId), (oldData: CommentResponse) => {
+      queryClient.setQueryData(commentQueryKeys.list(postId), (oldData: CommentResponse) => {
         return {
           ...oldData,
           comments: oldData.comments.filter((comment) => comment.id !== id),
@@ -83,7 +83,7 @@ export const useLikeComment = () => {
     mutationFn: ({ id, currentLikes }: { currentLikes: number; id: number; postId: number }) =>
       commentApi.likeComment(id, currentLikes),
     onSuccess: ({ id, postId }: { id: number; postId: number }) => {
-      queryClient.setQueryData(postQueryKeys.comments.list(postId), (oldData: CommentResponse) => {
+      queryClient.setQueryData(commentQueryKeys.list(postId), (oldData: CommentResponse) => {
         return {
           ...oldData,
           comments: oldData.comments.map((comment) =>

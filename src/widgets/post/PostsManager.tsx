@@ -1,7 +1,8 @@
-import { Edit2, Plus, Search, ThumbsUp, Trash2 } from "lucide-react"
+import { Plus, Search } from "lucide-react"
 import { useState } from "react"
 
 import { PostTable } from "@/entities/post/ui"
+import { CommentManagement } from "@/features/comment-management/ui/CommentManagement"
 import { useSearchQuery } from "@/shared/hook"
 import { highlightText } from "@/shared/lib/utils"
 import { Button, Input, Textarea } from "@/shared/ui"
@@ -9,35 +10,25 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/shared/ui/card"
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/shared/ui/dialog"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/shared/ui/select"
 
-import { useGetTags } from "./hooks"
-import { useAddComment, useDeleteComment, useGetComments, useLikeComment, useUpdateComment } from "./hooks/useComment"
-import { useAddPost, useDeletePost, useGetPosts, useUpdatePost } from "./hooks/usePost"
-import { changePostSearchParams, DEFAULT_POST_SEARCH_PARAMS } from "./lib/postSearchUtils"
-import { AddComment, UpdateComment } from "./types/comment"
-import { AddPost, PostSearchParams, UpdatePost } from "./types/post"
+import { useGetTags } from "../../features/posts/hooks"
+import { useAddPost, useDeletePost, useGetPosts, useUpdatePost } from "../../features/posts/hooks/usePost"
+import { changePostSearchParams, DEFAULT_POST_SEARCH_PARAMS } from "../../features/posts/lib/postSearchUtils"
+import { AddPost, PostSearchParams, UpdatePost } from "../../features/posts/types/post"
 
 const PostsManager = () => {
-  // URL 파라미터 관리 - 초기값을 기본값으로 설정
+  // URL 파라미터 관리
   const { searchCondition, setSearchCondition } = useSearchQuery<PostSearchParams>(DEFAULT_POST_SEARCH_PARAMS)
 
-  // 검색어 입력 임시 상태 (엔터 전까지)
+  // 검색어 입력 상태
   const [searchInput, setSearchInput] = useState(searchCondition.search)
 
-  // 기타 상태 관리
+  // Post 관련 상태만 (Comment 관련 제거)
   const [newPost, setNewPost] = useState<AddPost | null>(null)
   const [selectedPost, setSelectedPost] = useState<UpdatePost | null>(null)
-
   const [showAddDialog, setShowAddDialog] = useState(false)
   const [showEditDialog, setShowEditDialog] = useState(false)
-
-  const [selectedComment, setSelectedComment] = useState<UpdateComment | null>(null)
-  const [newComment, setNewComment] = useState<AddComment | null>(null)
-
-  const [showAddCommentDialog, setShowAddCommentDialog] = useState(false)
-  const [showEditCommentDialog, setShowEditCommentDialog] = useState(false)
   const [showPostDetailDialog, setShowPostDetailDialog] = useState(false)
   const [showUserModal, setShowUserModal] = useState(false)
-
   const [selectedUser, setSelectedUser] = useState(null)
 
   // React Query 훅 사용
@@ -159,62 +150,6 @@ const PostsManager = () => {
     })
   }
 
-  // 댓글 목록 가져오기
-  const { data: commentsList } = useGetComments(selectedPost?.id)
-
-  const { mutate: addComment } = useAddComment()
-  // 댓글 추가
-  const handleAddComment = () => {
-    if (!newComment) return
-    addComment(newComment, {
-      onSuccess: () => {
-        setShowAddCommentDialog(false)
-        setNewComment({ body: "", postId: null, userId: 1 })
-      },
-    })
-  }
-
-  const { mutate: updateComment } = useUpdateComment()
-  // 댓글 업데이트
-  const handleUpdateComment = async () => {
-    if (!selectedComment) return
-    updateComment(selectedComment, {
-      onSuccess: () => {
-        setShowEditCommentDialog(false)
-      },
-    })
-  }
-
-  const { mutate: deleteComment } = useDeleteComment()
-  // 댓글 삭제
-  const handleDeleteComment = (id: number, postId: number) => {
-    deleteComment(
-      { id, postId },
-      {
-        onSuccess: () => {
-          setShowEditCommentDialog(false)
-        },
-      },
-    )
-  }
-
-  const { mutate: likeComment } = useLikeComment()
-  // 댓글 좋아요
-  const handleLikeComment = (id: number, postId: number, currentLikes: number) => {
-    likeComment(
-      {
-        id,
-        currentLikes,
-        postId,
-      },
-      {
-        onSuccess: () => {
-          setShowEditCommentDialog(false)
-        },
-      },
-    )
-  }
-
   // 게시물 상세 보기
   const openPostDetail = (post) => {
     setSelectedPost(post)
@@ -245,54 +180,6 @@ const PostsManager = () => {
       posts={posts}
       searchCondition={searchCondition}
     />
-  )
-
-  // 댓글 렌더링
-  const renderComments = (postId) => (
-    <div className="mt-2">
-      <div className="flex items-center justify-between mb-2">
-        <h3 className="text-sm font-semibold">댓글</h3>
-        <Button
-          onClick={() => {
-            setNewComment((prev) => ({ ...prev, postId }))
-            setShowAddCommentDialog(true)
-          }}
-          size="sm"
-        >
-          <Plus className="w-3 h-3 mr-1" />
-          댓글 추가
-        </Button>
-      </div>
-      <div className="space-y-1">
-        {commentsList?.comments?.map((comment) => (
-          <div className="flex items-center justify-between text-sm border-b pb-1" key={comment.id}>
-            <div className="flex items-center space-x-2 overflow-hidden">
-              <span className="font-medium truncate">{comment.user.username}:</span>
-              <span className="truncate">{highlightText(comment.body, searchCondition.search)}</span>
-            </div>
-            <div className="flex items-center space-x-1">
-              <Button onClick={() => handleLikeComment(comment.id, postId, comment.likes)} size="sm" variant="ghost">
-                <ThumbsUp className="w-3 h-3" />
-                <span className="ml-1 text-xs">{comment.likes}</span>
-              </Button>
-              <Button
-                onClick={() => {
-                  setSelectedComment(comment)
-                  setShowEditCommentDialog(true)
-                }}
-                size="sm"
-                variant="ghost"
-              >
-                <Edit2 className="w-3 h-3" />
-              </Button>
-              <Button onClick={() => handleDeleteComment(comment.id, postId)} size="sm" variant="ghost">
-                <Trash2 className="w-3 h-3" />
-              </Button>
-            </div>
-          </div>
-        ))}
-      </div>
-    </div>
   )
 
   return (
@@ -492,41 +379,7 @@ const PostsManager = () => {
         </DialogContent>
       </Dialog>
 
-      {/* 댓글 추가 대화상자 */}
-      <Dialog onOpenChange={setShowAddCommentDialog} open={showAddCommentDialog}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>새 댓글 추가</DialogTitle>
-          </DialogHeader>
-          <div className="space-y-4">
-            <Textarea
-              onChange={(e) => setNewComment({ ...newComment, body: e.target.value })}
-              placeholder="댓글 내용"
-              value={newComment?.body || ""}
-            />
-            <Button onClick={handleAddComment}>댓글 추가</Button>
-          </div>
-        </DialogContent>
-      </Dialog>
-
-      {/* 댓글 수정 대화상자 */}
-      <Dialog onOpenChange={setShowEditCommentDialog} open={showEditCommentDialog}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>댓글 수정</DialogTitle>
-          </DialogHeader>
-          <div className="space-y-4">
-            <Textarea
-              onChange={(e) => setSelectedComment({ ...selectedComment, body: e.target.value })}
-              placeholder="댓글 내용"
-              value={selectedComment?.body || ""}
-            />
-            <Button onClick={handleUpdateComment}>댓글 업데이트</Button>
-          </div>
-        </DialogContent>
-      </Dialog>
-
-      {/* 게시물 상세 보기 대화상자 */}
+      {/* 게시물 상세 보기 대화상자 - CommentManagement 사용 */}
       <Dialog onOpenChange={setShowPostDetailDialog} open={showPostDetailDialog}>
         <DialogContent className="max-w-3xl">
           <DialogHeader>
@@ -534,7 +387,7 @@ const PostsManager = () => {
           </DialogHeader>
           <div className="space-y-4">
             <p>{highlightText(selectedPost?.body, searchCondition.search)}</p>
-            {renderComments(selectedPost?.id)}
+            <CommentManagement postId={selectedPost?.id} searchTerm={searchCondition.search} />
           </div>
         </DialogContent>
       </Dialog>

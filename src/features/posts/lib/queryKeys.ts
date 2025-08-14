@@ -1,5 +1,3 @@
-import { PostSearchParams } from "../types/post"
-
 const tagQueryKeys = {
   all: ["tags"],
   list: () => [...tagQueryKeys.all, "list"],
@@ -7,7 +5,7 @@ const tagQueryKeys = {
 
 const postsQueryKeys = {
   all: ["posts"],
-  list: (filters: PostSearchParams) => [...postsQueryKeys.all, filters],
+  list: (filters: any) => [...postsQueryKeys.all, filters],
 }
 
 export const userQueryKeys = {
@@ -15,14 +13,8 @@ export const userQueryKeys = {
   basic: () => [...userQueryKeys.all, "basic"],
 }
 
-export const commentQueryKeys = {
-  all: ["comments"],
-  list: (postId?: number) => [...commentQueryKeys.all, postId],
-}
-
 export const postQueryKeys = {
   tags: tagQueryKeys,
   posts: postsQueryKeys,
   users: userQueryKeys,
-  comments: commentQueryKeys,
 }
