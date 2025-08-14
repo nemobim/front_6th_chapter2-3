@@ -9,6 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/shared/ui/table"
 
 import { useGetTags } from "./hooks"
+import { useGetComments } from "./hooks/useComment"
 import { useAddPost, useDeletePost, useGetPosts, useUpdatePost } from "./hooks/usePost"
 import { changePostSearchParams, DEFAULT_POST_SEARCH_PARAMS } from "./lib/postSearchUtils"
 import { PostSearchParams, UpdatePost } from "./types/post"
@@ -25,7 +26,6 @@ const PostsManager = () => {
   const [showAddDialog, setShowAddDialog] = useState(false)
   const [showEditDialog, setShowEditDialog] = useState(false)
   const [newPost, setNewPost] = useState({ title: "", body: "", userId: 1 })
-  const [comments, setComments] = useState({})
   const [selectedComment, setSelectedComment] = useState(null)
   const [newComment, setNewComment] = useState({ body: "", postId: null, userId: 1 })
   const [showAddCommentDialog, setShowAddCommentDialog] = useState(false)
@@ -152,17 +152,8 @@ const PostsManager = () => {
     })
   }
 
-  // 댓글 가져오기
-  const fetchComments = async (postId) => {
-    if (comments[postId]) return
-    try {
-      const response = await fetch(`/api/comments/post/${postId}`)
-      const data = await response.json()
-      setComments((prev) => ({ ...prev, [postId]: data.comments }))
-    } catch (error) {
-      console.error("댓글 가져오기 오류:", error)
-    }
-  }
+  // 댓글 목록 가져오기
+  const { data: commentsList } = useGetComments(selectedPost?.id)
 
   // 댓글 추가
   const addComment = async () => {
@@ -173,10 +164,10 @@ const PostsManager = () => {
         body: JSON.stringify(newComment),
       })
       const data = await response.json()
-      setComments((prev) => ({
-        ...prev,
-        [data.postId]: [...(prev[data.postId] || []), data],
-      }))
+      // setComments((prev) => ({
+      //   ...prev,
+      //   [data.postId]: [...(prev[data.postId] || []), data],
+      // }))
       setShowAddCommentDialog(false)
       setNewComment({ body: "", postId: null, userId: 1 })
     } catch (error) {
@@ -193,10 +184,10 @@ const PostsManager = () => {
         body: JSON.stringify({ body: selectedComment.body }),
       })
       const data = await response.json()
-      setComments((prev) => ({
-        ...prev,
-        [data.postId]: prev[data.postId].map((comment) => (comment.id === data.id ? data : comment)),
-      }))
+      // setComments((prev) => ({
+      //   ...prev,
+      //   [data.postId]: prev[data.postId].map((comment) => (comment.id === data.id ? data : comment)),
+      // }))
       setShowEditCommentDialog(false)
     } catch (error) {
       console.error("댓글 업데이트 오류:", error)
@@ -209,10 +200,10 @@ const PostsManager = () => {
       await fetch(`/api/comments/${id}`, {
         method: "DELETE",
       })
-      setComments((prev) => ({
-        ...prev,
-        [postId]: prev[postId].filter((comment) => comment.id !== id),
-      }))
+      // setComments((prev) => ({
+      //   ...prev,
+      //   [postId]: prev[postId].filter((comment) => comment.id !== id),
+      // }))
     } catch (error) {
       console.error("댓글 삭제 오류:", error)
     }
@@ -227,12 +218,12 @@ const PostsManager = () => {
         body: JSON.stringify({ likes: comments[postId].find((c) => c.id === id).likes + 1 }),
       })
       const data = await response.json()
-      setComments((prev) => ({
-        ...prev,
-        [postId]: prev[postId].map((comment) =>
-          comment.id === data.id ? { ...data, likes: comment.likes + 1 } : comment,
-        ),
-      }))
+      // setComments((prev) => ({
+      //   ...prev,
+      //   [postId]: prev[postId].map((comment) =>
+      //     comment.id === data.id ? { ...data, likes: comment.likes + 1 } : comment,
+      //   ),
+      // }))
     } catch (error) {
       console.error("댓글 좋아요 오류:", error)
     }
@@ -241,7 +232,6 @@ const PostsManager = () => {
   // 게시물 상세 보기
   const openPostDetail = (post) => {
     setSelectedPost(post)
-    fetchComments(post.id)
     setShowPostDetailDialog(true)
   }
 
@@ -366,7 +356,7 @@ const PostsManager = () => {
         </Button>
       </div>
       <div className="space-y-1">
-        {comments[postId]?.map((comment) => (
+        {commentsList?.comments?.map((comment) => (
           <div className="flex items-center justify-between text-sm border-b pb-1" key={comment.id}>
             <div className="flex items-center space-x-2 overflow-hidden">
               <span className="font-medium truncate">{comment.user.username}:</span>

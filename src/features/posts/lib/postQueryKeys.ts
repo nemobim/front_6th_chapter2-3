@@ -15,8 +15,14 @@ export const userQueryKeys = {
   basic: () => [...userQueryKeys.all, "basic"],
 }
 
+export const commentQueryKeys = {
+  all: ["comments"],
+  list: (postId?: number) => [...commentQueryKeys.all, postId],
+}
+
 export const postQueryKeys = {
   tags: tagQueryKeys,
   posts: postsQueryKeys,
   users: userQueryKeys,
+  comments: commentQueryKeys,
 }
