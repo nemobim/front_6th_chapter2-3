@@ -2,7 +2,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 
 import { commentApi } from "../api/commentApi"
 import { postQueryKeys } from "../lib"
-import { AddComment, CommentResponse } from "../types/comment"
+import { AddComment, CommentResponse, UpdateComment } from "../types/comment"
 
 /** 댓글 가져오기 */
 export const useGetComments = (postId?: number) => {
@@ -29,6 +29,28 @@ export const useAddComment = () => {
     },
     onError: (error) => {
       console.error("댓글 추가 실패:", error)
+    },
+  })
+}
+
+/** 댓글 업데이트 */
+export const useUpdateComment = () => {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: (commentData: UpdateComment) => commentApi.updateComment(commentData),
+    onSuccess: (updatedComment) => {
+      // 해당 게시물의 댓글 목록 캐시 업데이트
+      queryClient.setQueryData(postQueryKeys.comments.list(updatedComment.postId), (oldData: CommentResponse) => {
+        console.log(updatedComment, oldData)
+        return {
+          ...oldData,
+          comments: oldData.comments.map((comment) => (comment.id === updatedComment.id ? updatedComment : comment)),
+        }
+      })
+    },
+    onError: (error) => {
+      console.error("댓글 업데이트 실패:", error)
     },
   })
 }

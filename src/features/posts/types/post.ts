@@ -29,6 +29,7 @@ export interface AddPost {
   userId: number
 }
 
+/**게시물 추가 응답 */
 export interface AddPostResponse extends AddPost {
   id: number
 }

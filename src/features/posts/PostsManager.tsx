@@ -9,10 +9,11 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/shared/ui/table"
 
 import { useGetTags } from "./hooks"
-import { useAddComment, useGetComments } from "./hooks/useComment"
+import { useAddComment, useGetComments, useUpdateComment } from "./hooks/useComment"
 import { useAddPost, useDeletePost, useGetPosts, useUpdatePost } from "./hooks/usePost"
 import { changePostSearchParams, DEFAULT_POST_SEARCH_PARAMS } from "./lib/postSearchUtils"
-import { PostSearchParams, UpdatePost } from "./types/post"
+import { AddComment, UpdateComment } from "./types/comment"
+import { AddPost, PostSearchParams, UpdatePost } from "./types/post"
 
 const PostsManager = () => {
   // URL 파라미터 관리 - 초기값을 기본값으로 설정
@@ -22,16 +23,20 @@ const PostsManager = () => {
   const [searchInput, setSearchInput] = useState(searchCondition.search)
 
   // 기타 상태 관리
+  const [newPost, setNewPost] = useState<AddPost | null>(null)
   const [selectedPost, setSelectedPost] = useState<UpdatePost | null>(null)
+
   const [showAddDialog, setShowAddDialog] = useState(false)
   const [showEditDialog, setShowEditDialog] = useState(false)
-  const [newPost, setNewPost] = useState({ title: "", body: "", userId: 1 })
-  const [selectedComment, setSelectedComment] = useState(null)
-  const [newComment, setNewComment] = useState({ body: "", postId: null, userId: 1 })
+
+  const [selectedComment, setSelectedComment] = useState<UpdateComment | null>(null)
+  const [newComment, setNewComment] = useState<AddComment | null>(null)
+
   const [showAddCommentDialog, setShowAddCommentDialog] = useState(false)
   const [showEditCommentDialog, setShowEditCommentDialog] = useState(false)
   const [showPostDetailDialog, setShowPostDetailDialog] = useState(false)
   const [showUserModal, setShowUserModal] = useState(false)
+
   const [selectedUser, setSelectedUser] = useState(null)
 
   // React Query 훅 사용
@@ -121,6 +126,7 @@ const PostsManager = () => {
   const { mutate: addPost } = useAddPost(changePostSearchParams(searchCondition))
   // 게시물 추가
   const handleAddPost = () => {
+    if (!newPost) return
     addPost(newPost, {
       onSuccess: () => {
         setShowAddDialog(false)
@@ -157,7 +163,8 @@ const PostsManager = () => {
 
   const { mutate: addComment } = useAddComment()
   // 댓글 추가
-  const handleAddComment = async () => {
+  const handleAddComment = () => {
+    if (!newComment) return
     addComment(newComment, {
       onSuccess: () => {
         setShowAddCommentDialog(false)
@@ -166,23 +173,15 @@ const PostsManager = () => {
     })
   }
 
+  const { mutate: updateComment } = useUpdateComment()
   // 댓글 업데이트
-  const updateComment = async () => {
-    try {
-      const response = await fetch(`/api/comments/${selectedComment.id}`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ body: selectedComment.body }),
-      })
-      const data = await response.json()
-      // setComments((prev) => ({
-      //   ...prev,
-      //   [data.postId]: prev[data.postId].map((comment) => (comment.id === data.id ? data : comment)),
-      // }))
-      setShowEditCommentDialog(false)
-    } catch (error) {
-      console.error("댓글 업데이트 오류:", error)
-    }
+  const handleUpdateComment = async () => {
+    if (!selectedComment) return
+    updateComment(selectedComment, {
+      onSuccess: () => {
+        setShowEditCommentDialog(false)
+      },
+    })
   }
 
   // 댓글 삭제
@@ -533,19 +532,19 @@ const PostsManager = () => {
             <Input
               onChange={(e) => setNewPost({ ...newPost, title: e.target.value })}
               placeholder="제목"
-              value={newPost.title}
+              value={newPost?.title || ""}
             />
             <Textarea
               onChange={(e) => setNewPost({ ...newPost, body: e.target.value })}
               placeholder="내용"
               rows={30}
-              value={newPost.body}
+              value={newPost?.body || ""}
             />
             <Input
               onChange={(e) => setNewPost({ ...newPost, userId: Number(e.target.value) })}
               placeholder="사용자 ID"
               type="number"
-              value={newPost.userId}
+              value={newPost?.userId || ""}
             />
             <Button onClick={handleAddPost}>게시물 추가</Button>
           </div>
@@ -585,7 +584,7 @@ const PostsManager = () => {
             <Textarea
               onChange={(e) => setNewComment({ ...newComment, body: e.target.value })}
               placeholder="댓글 내용"
-              value={newComment.body}
+              value={newComment?.body || ""}
             />
             <Button onClick={handleAddComment}>댓글 추가</Button>
           </div>
@@ -604,7 +603,7 @@ const PostsManager = () => {
               placeholder="댓글 내용"
               value={selectedComment?.body || ""}
             />
-            <Button onClick={updateComment}>댓글 업데이트</Button>
+            <Button onClick={handleUpdateComment}>댓글 업데이트</Button>
           </div>
         </DialogContent>
       </Dialog>
