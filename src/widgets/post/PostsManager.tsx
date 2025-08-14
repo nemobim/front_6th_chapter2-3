@@ -13,8 +13,8 @@ import { highlightText } from "@/shared/lib/utils"
 import { Button } from "@/shared/ui"
 import { Card, CardContent, CardHeader, CardTitle } from "@/shared/ui/card"
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/shared/ui/dialog"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/shared/ui/select"
 
+import { PostPagination } from "../../features/pagination-management/ui"
 import { ActiveFilters, SearchControls } from "../../features/search-management/ui"
 
 const PostsManager = () => {
@@ -223,41 +223,12 @@ const PostsManager = () => {
           {isLoading ? <div className="flex justify-center p-4">로딩 중...</div> : renderPostTable()}
 
           {/* 페이지네이션 */}
-          <div className="flex justify-between items-center">
-            <div className="flex items-center gap-2">
-              <span>표시</span>
-              <Select
-                onValueChange={(value) => handleLimitChange(Number(value))}
-                value={searchCondition.limit.toString()}
-              >
-                <SelectTrigger className="w-[180px]">
-                  <SelectValue placeholder="10" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="10">10</SelectItem>
-                  <SelectItem value="20">20</SelectItem>
-                  <SelectItem value="30">30</SelectItem>
-                </SelectContent>
-              </Select>
-              <span>항목</span>
-            </div>
-            <div className="flex gap-2">
-              <Button
-                disabled={Number(searchCondition.skip) === 0}
-                onClick={() =>
-                  handleSkipChange(Math.max(0, Number(searchCondition.skip) - Number(searchCondition.limit)))
-                }
-              >
-                이전
-              </Button>
-              <Button
-                disabled={Number(searchCondition.skip) + Number(searchCondition.limit) >= total}
-                onClick={() => handleSkipChange(Number(searchCondition.skip) + Number(searchCondition.limit))}
-              >
-                다음
-              </Button>
-            </div>
-          </div>
+          <PostPagination
+            onLimitChange={handleLimitChange}
+            onSkipChange={handleSkipChange}
+            searchCondition={searchCondition}
+            total={total}
+          />
         </div>
       </CardContent>
 
