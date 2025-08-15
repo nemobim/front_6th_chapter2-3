@@ -3,7 +3,6 @@ import { changePostSearchParams, DEFAULT_POST_SEARCH_PARAMS } from "@/entities/p
 import { PostSearchParams } from "@/entities/post/model"
 import { useSearchQuery } from "@/shared/hook"
 import { Card } from "@/shared/ui/card"
-import PostsManager from "@/widgets/post/PostsManager"
 import { PostsPagination, PostsTable, PostsTableFilters, PostsTableHeader } from "@/widgets/posts-table/ui"
 
 export const PostsManagerPage = () => {
@@ -13,11 +12,16 @@ export const PostsManagerPage = () => {
 
   return (
     <>
-      <PostsManager />
+      {/* <PostsManager /> */}
       <Card className="w-full max-w-6xl mx-auto">
         <PostsTableHeader searchCondition={searchCondition} />
         <PostsTableFilters />
-        <PostsTable posts={posts} searchCondition={searchCondition} />
+        {/* 게시물 테이블 */}
+        {isLoading ? (
+          <div className="flex justify-center p-4">로딩 중...</div>
+        ) : (
+          <PostsTable posts={posts} searchCondition={searchCondition} />
+        )}
         <PostsPagination />
       </Card>
     </>

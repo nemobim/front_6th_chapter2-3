@@ -1,6 +1,7 @@
 import { useState } from "react"
 
 import { useAddPost } from "@/entities/post/hook/usePost"
+import { changePostSearchParams } from "@/entities/post/lib/postSearchUtils"
 import { AddPost, PostSearchParams } from "@/entities/post/model"
 import { useDialog } from "@/shared/hook/useDialog"
 import { Button, Input, Textarea } from "@/shared/ui"
@@ -30,7 +31,7 @@ export const PostDialogs = ({ searchCondition }: PostDialogsProps) => {
     setNewPost({ ...newPost, userId: parseInt(e.target.value) })
   }
 
-  const { mutate: addPost } = useAddPost(searchCondition)
+  const { mutate: addPost } = useAddPost(changePostSearchParams(searchCondition))
   const handleAddPost = () => {
     addPost(newPost, {
       onSuccess: () => {
