@@ -2,23 +2,23 @@ import { useState } from "react"
 
 import { useUpdatePost } from "@/entities/post/hook/usePost"
 import { changePostSearchParams } from "@/entities/post/lib/postSearchUtils"
-import { PostSearchParams, UpdatePost } from "@/entities/post/model"
+import { PostSearchParams, PostWithUser, UpdatePost } from "@/entities/post/model"
 import { useDialog } from "@/shared/hook/useDialog"
 import { Button, Input, Textarea } from "@/shared/ui"
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/shared/ui/dialog"
 
 interface EditDialogsProps {
-  id: number
+  post: PostWithUser
   searchCondition: PostSearchParams
 }
 
-export const EditDialogs = ({ id, searchCondition }: EditDialogsProps) => {
+export const EditDialogs = ({ post, searchCondition }: EditDialogsProps) => {
   const { open: openEditDialog, isOpen: isEditDialogOpen } = useDialog("post-edit")
 
   const [editPost, setEditPost] = useState<UpdatePost>(() => ({
-    title: "",
-    body: "",
-    id,
+    title: post.title,
+    body: post.body,
+    id: post.id,
   }))
 
   const handleEditTitleChange = (e: React.ChangeEvent<HTMLInputElement>) => {

@@ -20,7 +20,7 @@ export const PostsTable = ({ posts, searchCondition }: PostsTableProps) => {
   const { open: openEditDialog, component: editDialog } = useDialog("post-edit")
 
   const handleEditPost = (post: PostWithUser) => {
-    openEditDialog(<EditDialogs id={post.id} searchCondition={searchCondition} />)
+    openEditDialog(<EditDialogs post={post} searchCondition={searchCondition} />)
   }
 
   return (
