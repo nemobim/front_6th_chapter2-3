@@ -1,6 +1,6 @@
 import { Edit2, MessageSquare, ThumbsDown, ThumbsUp, Trash2 } from "lucide-react"
 
-import { PostTableProps, PostWithUser, UpdatePost, User } from "@/entities/post/model/types"
+import { PostTableProps, User } from "@/entities/post/model/types"
 import { cn, highlightText } from "@/shared/lib/utils"
 import { Button } from "@/shared/ui"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/shared/ui/table"
@@ -14,13 +14,6 @@ export function PostTable({
   onEditPost,
   onDeletePost,
 }: PostTableProps) {
-  // PostWithUser를 UpdatePost로 변환하는 함수
-  const convertToUpdatePost = (post: PostWithUser): UpdatePost => ({
-    id: post.id,
-    title: post.title,
-    body: post.body,
-  })
-
   return (
     <Table>
       <TableHeader>
@@ -79,7 +72,7 @@ export function PostTable({
                 <Button onClick={() => onPostDetail(post)} size="sm" variant="ghost">
                   <MessageSquare className="w-4 h-4" />
                 </Button>
-                <Button onClick={() => onEditPost(convertToUpdatePost(post))} size="sm" variant="ghost">
+                <Button onClick={() => onEditPost(post)} size="sm" variant="ghost">
                   <Edit2 className="w-4 h-4" />
                 </Button>
                 <Button onClick={() => onDeletePost(post.id)} size="sm" variant="ghost">

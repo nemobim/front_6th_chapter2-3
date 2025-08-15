@@ -2,6 +2,8 @@ import { useDeletePost } from "@/entities/post/hook/usePost"
 import { changePostSearchParams } from "@/entities/post/lib/postSearchUtils"
 import { PostSearchParams, PostWithUser } from "@/entities/post/model"
 import { PostTable } from "@/entities/post/ui"
+import { EditDialogs } from "@/features/post-dialogs/ui"
+import { useDialog } from "@/shared/hook/useDialog"
 
 interface PostsTableProps {
   posts: PostWithUser[]
@@ -15,15 +17,24 @@ export const PostsTable = ({ posts, searchCondition }: PostsTableProps) => {
     deletePost(id)
   }
 
+  const { open: openEditDialog, component: editDialog } = useDialog("post-edit")
+
+  const handleEditPost = (post: PostWithUser) => {
+    openEditDialog(<EditDialogs id={post.id} searchCondition={searchCondition} />)
+  }
+
   return (
-    <PostTable
-      onDeletePost={handleDeletePost}
-      onEditPost={() => {}}
-      onPostDetail={() => {}}
-      onTagClick={() => {}}
-      onUserClick={() => {}}
-      posts={posts}
-      searchCondition={searchCondition}
-    />
+    <>
+      <PostTable
+        onDeletePost={handleDeletePost}
+        onEditPost={handleEditPost}
+        onPostDetail={() => {}}
+        onTagClick={() => {}}
+        onUserClick={() => {}}
+        posts={posts}
+        searchCondition={searchCondition}
+      />
+      {editDialog}
+    </>
   )
 }

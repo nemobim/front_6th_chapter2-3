@@ -136,7 +136,7 @@ export interface UpdatePost {
 /**게시물 테이블 */
 export interface PostTableProps {
   onDeletePost: (id: number) => void
-  onEditPost: (post: UpdatePost) => void
+  onEditPost: (post: PostWithUser) => void
   onPostDetail: (post: PostWithUser) => void
   onTagClick: (tag: string) => void
   onUserClick: (user: User) => void
