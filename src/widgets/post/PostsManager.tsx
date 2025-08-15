@@ -1,12 +1,12 @@
 import { Plus } from "lucide-react"
 import { useState } from "react"
 
+import { changePostSearchParams, DEFAULT_POST_SEARCH_PARAMS } from "@/entities/post/lib/postSearchUtils"
 import { PostTable } from "@/entities/post/ui"
 import { PostPagination } from "@/features/pagination-management/ui"
 import { PostDialogs } from "@/features/post-management/ui"
 import { useGetTags } from "@/features/posts/hooks"
 import { useAddPost, useDeletePost, useGetPosts, useUpdatePost } from "@/features/posts/hooks/usePost"
-import { changePostSearchParams, DEFAULT_POST_SEARCH_PARAMS } from "@/features/posts/lib/postSearchUtils"
 import { AddPost, PostSearchParams, UpdatePost } from "@/features/posts/types/post"
 import { ActiveFilters, SearchControls } from "@/features/search-management/ui"
 import { useUser } from "@/features/user-management/hooks"

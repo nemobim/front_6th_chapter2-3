@@ -6,6 +6,7 @@ export interface User {
   image: string
   username: string
 }
+
 export type UserInfo = {
   address: {
     address: string

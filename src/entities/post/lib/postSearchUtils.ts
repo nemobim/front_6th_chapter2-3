@@ -1,4 +1,4 @@
-import { PostSearchParams } from "../types/post"
+import { PostSearchParams } from "@/entities/post/model"
 
 // 기본 포스트 검색 파라미터
 export const DEFAULT_POST_SEARCH_PARAMS: PostSearchParams = {
