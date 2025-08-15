@@ -11,7 +11,13 @@ export const userQueryKeys = {
   user: (userId: number) => [...userQueryKeys.all, userId],
 }
 
+const tagQueryKeys = {
+  all: ["tags"],
+  list: () => [...tagQueryKeys.all, "list"],
+}
+
 export const queryKeys = {
   posts: postQueryKeys,
   users: userQueryKeys,
+  tags: tagQueryKeys,
 }

@@ -1,28 +1,40 @@
-import { PostSearchParams } from "@/entities/post/model/types"
+import { Dispatch, SetStateAction } from "react"
+
+import { PostSearchParams } from "@/entities/post/model"
 import { Button } from "@/shared/ui"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/shared/ui/select"
 
 interface PostPaginationProps {
-  onLimitChange: (limit: number) => void
-  onSkipChange: (skip: number) => void
   searchCondition: PostSearchParams
+  setSearchCondition: Dispatch<SetStateAction<PostSearchParams>>
   total: number
 }
 
-export function PostPagination({ searchCondition, total, onSkipChange, onLimitChange }: PostPaginationProps) {
+export const PostPagination = ({ searchCondition, setSearchCondition, total }: PostPaginationProps) => {
   const currentPage = Math.floor(Number(searchCondition.skip) / Number(searchCondition.limit)) + 1
   const totalPages = Math.ceil(total / Number(searchCondition.limit))
   const hasNextPage = Number(searchCondition.skip) + Number(searchCondition.limit) < total
   const hasPrevPage = Number(searchCondition.skip) > 0
 
-  const handlePrevPage = () => {
-    const newSkip = Math.max(0, Number(searchCondition.skip) - Number(searchCondition.limit))
-    onSkipChange(newSkip)
+  // 페이지네이션
+  const handleSkipChange = (skip: number) => {
+    setSearchCondition((prev) => ({ ...prev, skip }))
   }
 
+  // 페이지 크기 변경
+  const handleLimitChange = (limit: number) => {
+    setSearchCondition((prev) => ({ ...prev, limit, skip: 0 }))
+  }
+
+  // 이전 페이지
+  const handlePrevPage = () => {
+    const newSkip = Math.max(0, Number(searchCondition.skip) - Number(searchCondition.limit))
+    handleSkipChange(newSkip)
+  }
+  // 다음 페이지
   const handleNextPage = () => {
     const newSkip = Number(searchCondition.skip) + Number(searchCondition.limit)
-    onSkipChange(newSkip)
+    handleSkipChange(newSkip)
   }
 
   return (
@@ -31,7 +43,7 @@ export function PostPagination({ searchCondition, total, onSkipChange, onLimitCh
       <div className="flex items-center gap-2">
         <span>표시</span>
         <Select
-          onValueChange={(value) => onLimitChange(Number(value))}
+          onValueChange={(value) => handleLimitChange(Number(value))}
           value={searchCondition.limit?.toString() || "10"}
         >
           <SelectTrigger className="w-[180px]">

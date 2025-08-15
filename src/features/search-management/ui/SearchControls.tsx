@@ -1,11 +1,11 @@
 import { Search } from "lucide-react"
 
-import { PostSearchParams } from "@/entities/post/model/types"
+import { PostSearchParams } from "@/entities/post/model"
 import { Input } from "@/shared/ui"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/shared/ui/select"
 
 interface SearchControlsProps {
-  onKeyPress: (e: React.KeyboardEvent) => void
+  onKeyPressDown: (e: React.KeyboardEvent) => void
   onSearchInputChange: (value: string) => void
   onSearchSubmit: () => void
   onSortByChange: (value: string) => void
@@ -21,7 +21,7 @@ export function SearchControls({
   searchCondition,
   tags,
   onSearchInputChange,
-  onKeyPress,
+  onKeyPressDown,
   onTagChange,
   onSortByChange,
   onSortOrderChange,
@@ -35,7 +35,7 @@ export function SearchControls({
           <Input
             className="pl-8"
             onChange={(e) => onSearchInputChange(e.target.value)}
-            onKeyPress={onKeyPress}
+            onKeyPress={onKeyPressDown}
             placeholder="게시물 검색... (엔터로 검색)"
             value={searchInput}
           />

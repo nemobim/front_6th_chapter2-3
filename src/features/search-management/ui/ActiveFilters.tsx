@@ -1,4 +1,4 @@
-import { PostSearchParams } from "@/entities/post/model/types"
+import { PostSearchParams } from "@/entities/post/model"
 
 interface ActiveFiltersProps {
   searchCondition: PostSearchParams
