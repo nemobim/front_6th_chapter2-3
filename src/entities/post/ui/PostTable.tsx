@@ -1,6 +1,6 @@
 import { Edit2, MessageSquare, ThumbsDown, ThumbsUp, Trash2 } from "lucide-react"
 
-import { PostTableProps, PostWithUser, UpdatePost } from "@/entities/post/model/types"
+import { PostTableProps, PostWithUser, UpdatePost, User } from "@/entities/post/model/types"
 import { cn, highlightText } from "@/shared/lib/utils"
 import { Button } from "@/shared/ui"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/shared/ui/table"
@@ -58,7 +58,10 @@ export function PostTable({
               </div>
             </TableCell>
             <TableCell>
-              <div className="flex items-center space-x-2 cursor-pointer" onClick={() => onUserClick(post?.author)}>
+              <div
+                className="flex items-center space-x-2 cursor-pointer"
+                onClick={() => onUserClick(post?.author as User)}
+              >
                 <img alt={post?.author?.username} className="w-8 h-8 rounded-full" src={post?.author?.image} />
                 <span>{post?.author?.username}</span>
               </div>

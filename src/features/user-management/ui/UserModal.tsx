@@ -1,10 +1,10 @@
-import { User } from "@/entities/post/model/types"
+import { UserInfo } from "@/entities/post/model/types"
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/shared/ui/dialog"
 
 interface UserModalProps {
   onOpenChange: (open: boolean) => void
   open: boolean
-  user: User | null
+  user: UserInfo | null
 }
 
 export function UserModal({ open, onOpenChange, user }: UserModalProps) {

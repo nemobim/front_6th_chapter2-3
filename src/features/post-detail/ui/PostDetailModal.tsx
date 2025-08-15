@@ -17,10 +17,10 @@ export function PostDetailModal({ open, onOpenChange, post, searchTerm }: PostDe
     <Dialog onOpenChange={onOpenChange} open={open}>
       <DialogContent className="max-w-3xl">
         <DialogHeader>
-          <DialogTitle>{highlightText(post.title, searchTerm)}</DialogTitle>
+          <DialogTitle>{highlightText(post.title, searchTerm ?? "")}</DialogTitle>
         </DialogHeader>
         <div className="space-y-4">
-          <p>{highlightText(post.body, searchTerm)}</p>
+          <p>{highlightText(post.body, searchTerm ?? "")}</p>
           <CommentManagement postId={post.id} searchTerm={searchTerm} />
         </div>
       </DialogContent>

@@ -2,10 +2,15 @@ import path from "path"
 
 import react from "@vitejs/plugin-react"
 import { defineConfig } from "vite"
+import tsconfigPaths from "vite-tsconfig-paths"
+
+const base = process.env.NODE_ENV === "production" ? "/front_6th_chapter2-3/" : ""
 
 // https://vite.dev/config/
 export default defineConfig({
-  plugins: [react()],
+  base,
+  plugins: [react(), tsconfigPaths()],
+
   resolve: {
     alias: {
       "@": path.resolve(__dirname, "src"),

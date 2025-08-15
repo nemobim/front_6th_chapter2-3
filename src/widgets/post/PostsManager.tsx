@@ -53,9 +53,9 @@ const PostsManager = () => {
       search: searchInput,
       skip: 0,
       // 검색 시 다른 모든 필터 초기화 (DummyJSON에서 검색과 다른 필터들은 동시에 지원하지 않음)
-      tag: searchInput.trim() ? "all" : prev.tag,
-      sortBy: searchInput.trim() ? "none" : prev.sortBy,
-      order: searchInput.trim() ? "asc" : prev.order,
+      tag: searchInput?.trim() ?? "all",
+      sortBy: searchInput?.trim() ?? "none",
+      order: searchInput?.trim() ?? "asc",
     }))
   }
 
@@ -201,7 +201,7 @@ const PostsManager = () => {
             onSortOrderChange={handleSortOrderChange}
             onTagChange={handleTagChange}
             searchCondition={searchCondition}
-            searchInput={searchInput}
+            searchInput={searchInput ?? ""}
             tags={tags}
           />
 
