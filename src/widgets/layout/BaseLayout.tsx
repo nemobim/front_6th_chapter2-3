@@ -1,7 +1,7 @@
 import { ReactNode } from "react"
 
-import { Footer } from "./Footer"
-import { Header } from "./Header"
+import { Footer } from "@/widgets/layout/Footer"
+import { Header } from "@/widgets/layout/Header"
 
 interface BaseLayoutProps {
   children: ReactNode
