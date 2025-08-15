@@ -1,1 +1,0 @@
-export { usePostDetail } from "./usePostDetail"

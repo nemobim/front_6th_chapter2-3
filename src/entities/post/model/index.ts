@@ -5,8 +5,9 @@ export type {
   PostSearchParams,
   PostsParams,
   PostsResponse,
+  PostTableProps,
   PostWithUser,
   UpdatePost,
   UpdatePostResponse,
 } from "./post"
-export type { User, UsersResponse } from "./user"
+export type { User, UserInfo, UsersResponse } from "./user"

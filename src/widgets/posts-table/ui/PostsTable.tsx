@@ -2,9 +2,10 @@ import { Dispatch, SetStateAction } from "react"
 
 import { useDeletePost } from "@/entities/post/hook/usePost"
 import { changePostSearchParams } from "@/entities/post/lib/postSearchUtils"
-import { PostSearchParams, PostWithUser } from "@/entities/post/model"
+import { PostSearchParams, PostWithUser, User } from "@/entities/post/model"
 import { PostTable } from "@/entities/post/ui"
 import { EditDialogs } from "@/features/post-dialogs/ui"
+import { UserViewDialogs } from "@/features/user-dialogs/ui/UserViewDialogs"
 import { useDialog } from "@/shared/hook/useDialog"
 import { PostViewDialog } from "@/widgets/post-detail/ui"
 
@@ -51,6 +52,12 @@ export const PostsTable = ({ posts, searchCondition, setSearchCondition, setSear
     openPostDetailDialog(<PostViewDialog post={post} searchTerm={searchCondition.search || ""} />)
   }
 
+  const { open: openUserInfoDialog, component: userInfoDialog } = useDialog("user-info")
+  // 사용자 정보 보기
+  const handleUserInfo = (user: User) => {
+    openUserInfoDialog(<UserViewDialogs user={user} />)
+  }
+
   return (
     <>
       <PostTable
@@ -58,12 +65,13 @@ export const PostsTable = ({ posts, searchCondition, setSearchCondition, setSear
         onEditPost={handleEditPost}
         onPostDetail={handlePostDetail}
         onTagClick={handleTagChange}
-        onUserClick={() => {}}
+        onUserClick={handleUserInfo}
         posts={posts}
         searchCondition={searchCondition}
       />
       {editDialog}
       {viewDialog}
+      {userInfoDialog}
     </>
   )
 }

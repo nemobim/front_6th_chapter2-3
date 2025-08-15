@@ -8,6 +8,7 @@ export const postQueryKeys = {
 export const userQueryKeys = {
   all: ["users"],
   basic: () => [...userQueryKeys.all, "basic"],
+  user: (userId: number) => [...userQueryKeys.all, userId],
 }
 
 export const queryKeys = {

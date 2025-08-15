@@ -66,3 +66,14 @@ export interface UpdatePostResponse extends UpdatePost {
   tags: string[]
   userId: number
 }
+
+/**게시물 테이블 */
+export interface PostTableProps {
+  onDeletePost: (id: number) => void
+  onEditPost: (post: PostWithUser) => void
+  onPostDetail: (post: PostWithUser) => void
+  onTagClick: (tag: string) => void
+  onUserClick: (user: User) => void
+  posts: PostWithUser[]
+  searchCondition: PostSearchParams
+}

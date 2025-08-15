@@ -15,9 +15,6 @@ export const createDialogAtom = (id: string) => {
 export const userInfoDialogAtom = createDialogAtom("user-info")
 export const postViewDialogAtom = createDialogAtom("post-view")
 export const postEditDialogAtom = createDialogAtom("post-edit")
-export const postDeleteDialogAtom = createDialogAtom("post-delete")
-export const commentAddDialogAtom = createDialogAtom("comment-add")
-export const commentEditDialogAtom = createDialogAtom("comment-edit")
 
 // 등록된 모든 atom들을 가져오는 함수
 export const getAllDialogAtoms = () => Array.from(dialogAtoms.values())
