@@ -1,3 +1,5 @@
+import { useState } from "react"
+
 import { useGetPosts } from "@/entities/post/hook/usePost"
 import { changePostSearchParams, DEFAULT_POST_SEARCH_PARAMS } from "@/entities/post/lib/postSearchUtils"
 import { PostSearchParams } from "@/entities/post/model"
@@ -10,6 +12,9 @@ export const PostsManagerPage = () => {
 
   const { posts, total, isLoading } = useGetPosts(changePostSearchParams(searchCondition))
 
+  // 검색어 입력 상태
+  const [searchInput, setSearchInput] = useState(searchCondition.search)
+
   return (
     <>
       {/* <PostsManager /> */}
@@ -20,7 +25,12 @@ export const PostsManagerPage = () => {
         {isLoading ? (
           <div className="flex justify-center p-4">로딩 중...</div>
         ) : (
-          <PostsTable posts={posts} searchCondition={searchCondition} />
+          <PostsTable
+            posts={posts}
+            searchCondition={searchCondition}
+            setSearchCondition={setSearchCondition}
+            setSearchInput={setSearchInput}
+          />
         )}
         <PostsPagination />
       </Card>
