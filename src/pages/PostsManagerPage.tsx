@@ -13,7 +13,7 @@ export const PostsManagerPage = () => {
   const { posts, total, isLoading } = useGetPosts(changePostSearchParams(searchCondition))
 
   // 검색어 입력 상태
-  const [searchInput, setSearchInput] = useState(searchCondition.search)
+  const [searchInput, setSearchInput] = useState(searchCondition.search || "")
 
   return (
     <>

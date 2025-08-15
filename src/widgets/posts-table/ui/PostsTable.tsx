@@ -6,6 +6,7 @@ import { PostSearchParams, PostWithUser } from "@/entities/post/model"
 import { PostTable } from "@/entities/post/ui"
 import { EditDialogs } from "@/features/post-dialogs/ui"
 import { useDialog } from "@/shared/hook/useDialog"
+import { PostViewDialog } from "@/widgets/post-detail/ui"
 
 interface PostsTableProps {
   posts: PostWithUser[]
@@ -22,12 +23,12 @@ export const PostsTable = ({ posts, searchCondition, setSearchCondition, setSear
   }
 
   const { open: openEditDialog, component: editDialog } = useDialog("post-edit")
-
+  // 게시물 수정
   const handleEditPost = (post: PostWithUser) => {
     openEditDialog(<EditDialogs post={post} searchCondition={searchCondition} />)
   }
 
-  // 태그 변경 핸들러
+  // 태그 변경
   const handleTagChange = (value: string) => {
     const tagValue = value === "all" ? "all" : value
     setSearchCondition((prev) => ({
@@ -44,19 +45,25 @@ export const PostsTable = ({ posts, searchCondition, setSearchCondition, setSear
       setSearchInput("")
     }
   }
+  const { open: openPostDetailDialog, component: viewDialog } = useDialog("post-view")
+  // 게시물 상세 보기
+  const handlePostDetail = (post: PostWithUser) => {
+    openPostDetailDialog(<PostViewDialog post={post} searchTerm={searchCondition.search || ""} />)
+  }
 
   return (
     <>
       <PostTable
         onDeletePost={handleDeletePost}
         onEditPost={handleEditPost}
-        onPostDetail={() => {}}
+        onPostDetail={handlePostDetail}
         onTagClick={handleTagChange}
         onUserClick={() => {}}
         posts={posts}
         searchCondition={searchCondition}
       />
       {editDialog}
+      {viewDialog}
     </>
   )
 }
